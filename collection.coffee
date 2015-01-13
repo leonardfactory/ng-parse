@@ -2,9 +2,9 @@ angular
     .module 'ngParse'
     .factory 'NgParseCollection', ($q, NgParseObject, NgParseQuery) ->
         class NgParseCollection
-            constructor: (options) ->
+            constructor: (options = {}) ->
                 @class  = options.class ? NgParseObject
-                @query  = options.query ? new NgParseQuery(@class.class)
+                @query  = options.query ? new NgParseQuery @class, new Parse.Query(@class.class)
                 @models = []
             
             add: (obj) ->
@@ -29,13 +29,15 @@ angular
                 if not @query?
                     throw new Error "Can't fetch Collection without a query"
                 
-                unless @query instanceof Parse.Query
-                    throw new Error "Can't fetch Collection without using a `Parse.Query` object"
+                unless @query instanceof NgParseQuery
+                    throw new Error "Can't fetch Collection without using a `NgParseQuery` object"
                 
                 @query
                     .find()
                     .then (results) =>
                         @models = []
+                        console.log 'Found results for Collection: ' + @class.className
+                        console.log result for result in results
                         @models.push result for result in results
                         results
                     

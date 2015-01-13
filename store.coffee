@@ -6,29 +6,28 @@ angular
                 @_models = []
             
             # Check if a model is registered
-            hasModel: (anotherModel) ->
-                # ...
-                for model in @_models when model.id is anotherModel.id
-                    return model
+            hasModel: (className, id) ->
+                return null if not @_models[className]
                 
-                null
+                if @_models[className].hasOwnProperty id
+                    @_models[className][id]
+                else
+                    null
             
             # Update a model propagating the change to all other registered NgParseObject.
             # If the model does not exists, allocate it
             
             updateModel: (anotherModel) ->
                 @_models[anotherModel.className] = {} if not @_models[anotherModel.className]?
+                    
+                classModels = @_models[anotherModel.className]
+                found = classModels.hasOwnProperty anotherModel.id
                 
-                found = no
+                classModels[anotherModel.id] = anotherModel
+                    
+                @propagate anotherModel if found # Propagate replacement if necessary
                 
-                for model, i in @_models
-                    if model.id is anotherModel.id
-                        @_models[i] = anotherModel # Replace model.
-                        @propagate anotherModel # Propagate the replacement
-                        found = yes
-                        break
-                
-                @_models.push anotherModel if not found
+                # console.log "Registered update for model #{anotherModel.className}:#{anotherModel.id} (found? #{found})"
                 
                 found # Tell the caller if we have inserted it or replaced an existing one
                 

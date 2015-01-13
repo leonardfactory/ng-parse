@@ -8,10 +8,14 @@ angular
         model (**class**) we are going to use in the application
         ###
         class NgParseObject
-            constructor: (options) ->
+            
+            @class      = Parse.Object
+            @className  = @class.className ? ''
+            
+            constructor: (options = {}) ->
                 
-                @class      = options.class ? Parse.Object
-                @className  = options.className ? options.class?.className ? ''
+                @class      = options.class ? @constructor.class
+                @className  = options.className ? options.class?.className ?  @constructor.className
                 
                 # We can pass a model to grab its id or directly the id.
                 id          = options.id ? options.model?.id ? null
@@ -19,15 +23,18 @@ angular
                 # Update model inside ngParseStore if provided
                 ngParseStore.updateModel options.model if options.model?
                                 
-                @model =    if id? and storeModel = ngParseStore.hasModel @className, id  
+                @model =    if id? and storeModel = ngParseStore.hasModel @className, id
+                                unless storeModel?
+                                    throw new Error "Can't find a model with id #{id} in the store, even if an id has been passed."
                                 storeModel
                             else
                                 new @class # Default initialization
                 
                 # NgParseStore listener
-                @updateListener() if @id?
+                @updateListener() if id?
                 
                 @initialize() if @initialize?
+                
             
             isNew: -> @model.isNew()
             
@@ -38,8 +45,10 @@ angular
                 else if not @id?
                     throw new Error "Cannot register updates for a model without an id. ClassName: #{@className}"
                 else
-                    @_storeListener = ngParseStore.onUpdate @model, () =>
-                        @model = ngParseStore.hasModel @className, @id
+                    @_storeListener = ngParseStore.onUpdate @model, @updateModel
+                            
+            updateModel: =>
+                @model = ngParseStore.hasModel @className, @id
             
             save: -> 
                 firstSave = @isNew()
