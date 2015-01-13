@@ -15,6 +15,9 @@ angular
                 
                 # We can pass a model to grab its id or directly the id.
                 id          = options.id ? options.model?.id ? null
+                
+                # Update model inside ngParseStore if provided
+                ngParseStore.updateModel options.model if options.model?
                                 
                 @model =    if id? and storeModel = ngParseStore.hasModel @className, id  
                                 storeModel
@@ -44,7 +47,7 @@ angular
                     .$save()
                     .then (savedObj) =>
                         ngParseStore.updateModel savedObj
-                        @updateListener()
+                        @updateListener() if firstSave
                         savedObj
             
             fetch: -> 
