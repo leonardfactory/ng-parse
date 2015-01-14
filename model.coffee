@@ -8,77 +8,36 @@ angular
         model (**class**) we are going to use in the application
         ###
         class NgParseObject
+            @className  = ''
             
-            @class      = Parse.Object
-            @className  = @class.className ? ''
+            @attrNames = ['createdAt', 'updatedAt', 'objectId']
+            
+            # Specify attributes for the current extended class of NgParseObject
+            @defineAttributes: (attrNames) ->
+                @attrNames.push.apply @attrNames, attrNames
+                for attr in @attrNames
+                    do (attr) =>
+                        unless attr.name? is attr.type?
+                            throw new Error "An attribute specified with a name should have a value and vice-versa"
+                        
+                        attrName = if attr.name? then attr.name else attr # Support for specifying type as an Object with properties `name` and `class`
+                        Object.defineProperty @prototype, attr,
+                            get: -> @attributes[attr]
+                            set: (value) -> @attributes[attr] = value
+                
             
             constructor: (options = {}) ->
+                @className = @constructor.className
                 
-                @class      = options.class ? @constructor.class
-                @className  = options.className ? options.class?.className ?  @constructor.className
+                @attributes = {}
+                for attr in @constructor.attrNames
+                    do (attr) =>
+                        attrName    = if attr.name? then attr.name else attr
+                        attrValue   = if attr.type? then new attr.type else null
+                        @attributes[attrName] = attrValue
                 
-                # We can pass a model to grab its id or directly the id.
-                id          = options.id ? options.model?.id ? null
-                
-                # Update model inside ngParseStore if provided
-                ngParseStore.updateModel options.model if options.model?
-                                
-                @model =    if id? and storeModel = ngParseStore.hasModel @className, id
-                                unless storeModel?
-                                    throw new Error "Can't find a model with id #{id} in the store, even if an id has been passed."
-                                console.log "Found user with id: #{id}" if @className is '_User'
-                                storeModel
-                            else
-                                new @class # Default initialization
-                
-                # NgParseStore listener
-                @updateListener() if id? and options.listen
-                
-                @initialize() if @initialize?
+            fetch: ->
+                if not @objectId
+                    throw new Error "Unable to fetch an NgParseObject without and id provided. Class: #{@className}"
                 
             
-            isNew: -> @model.isNew()
-            
-            # Prepare NgParseStore listener
-            updateListener: ->
-                if @_storeListener?
-                    console.log "Trying to update the listener even if one is already present for Object #{@className}:#{@id}"
-                else if not @id?
-                    throw new Error "Cannot register updates for a model without an id. ClassName: #{@className}"
-                else
-                    @_storeListener = ngParseStore.onUpdate @model, @updateModel.bind @
-            
-            updateModel: ->
-                console.log "Updating model for #{@className}:#{@id}"
-                @model = ngParseStore.hasModel @className, @id
-                console.log @model
-            
-            save: -> 
-                firstSave = @isNew()
-                @model
-                    .$save()
-                    .then (savedObj) =>
-                        ngParseStore.updateModel savedObj
-                        console.log "Saved changes for #{@className}:#{@model.id}"
-                        @updateListener() if firstSave 
-                        savedObj
-            
-            fetch: -> 
-                @model
-                    .$fetch()
-                    .then (fetchedObj) =>
-                        ngParseStore.updateModel fetchedObj
-                        fetchedObj
-            
-            # @todo propagate destroy
-            destroy: -> 
-                @model.$destroy()
-            
-            Object.defineProperties @prototype,
-                'attributes':
-                    get: -> @model # Dot syntax for attributes is available directly on the Parse.Object
-                
-                'id':
-                    get: -> @model.id
-                
-        NgParseObject

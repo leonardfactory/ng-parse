@@ -3,47 +3,68 @@ describe 'NgParse.Object', ->
     ngpStore = null
     NgObject = null
     TestObject = null
-    TestRawObject = null
+    FailObject = null
+    testObj = null
     
     beforeEach -> 
         angular.mock.module 'ngParse'
-        inject (NgParseObject, ngParseStore) ->
+        inject (NgParseObject) ->
             NgObject = NgParseObject
-            ngpStore = ngParseStore
-            TestRawObject =
-                class TRO
-                    constructor: (@id, @data) ->
-                        @className = 'Test'
+            
+            FailObject =
+                class FO extends NgParseObject
+                    @className = 'FailTest'
                     
             TestObject = 
                 class TO extends NgParseObject
-                    @class = Parse.Object
                     @className = 'Test'
-                        
-            
+                    @defineAttributes ['testAttr']
+                    
+            testObj = new TestObject
     
-    it 'should have base class set', ->
-        expect(NgObject.class).toBe Parse.Object
-        expect(NgObject.className).toBe ''
+    # Attributes
+    it 'extended object should have standard attributes defined', ->
+        expect(TestObject.attrNames).toContain 'createdAt'
+        expect(TestObject.attrNames).toContain 'updatedAt'
+        expect(TestObject.attrNames).toContain 'objectId'
     
-    it 'instances should have base class accessible via constructor', ->
-        testObject = new NgObject()
-        expect(testObject.class).toBe Parse.Object
-        expect(testObject.className).toBe ''
+    it 'extended object should have custom attributes defined', ->
+        expect(TestObject.attrNames).toContain 'testAttr'
+        
+    it 'extended object should have getter for custom attributes', ->
+        expect(TestObject.prototype.hasOwnProperty 'testAttr').toBeTruthy()
     
-    it 'inherited classes should be instance of parent', ->
-        testObject = new TestObject()
-        expect(testObject instanceof NgObject).toBeTruthy()    
+    it 'extended object instances should get and set custom attributes', ->
+        testObj.objectId = "TestId"
+        expect(testObj.objectId).toEqual("TestId")
+        expect(testObj.attributes.objectId).toEqual("TestId")
+    
+    it 'extended object instance attributes should be null if not set', -> 
+        expect(testObj.attributes.testAttr).toBeNull()
         
-    it 'two objects should share the same model', ->
-        testRawObj          = new TestRawObject 10, { name: 'giovanni' }
-        testRawObjUpdated   = new TestRawObject 10, { name: 'giovanni', surname: 'rossi' }
+    it 'defineAttributes with a tuple <name, type> should require name', ->
+        expect(-> FailObject.defineAttributes [{ name: 'wrongAttr' }]).toThrow()
         
-        testObj1 = new TestObject model: testRawObj
-        testObj2 = new TestObject model: testRawObjUpdated
+    it 'defineAttributes with a tuple <name, type> should require type', ->
+        expect(-> FailObject.defineAttributes [{ type: Object }]).toThrow()
         
-        expect(testObj1.model.data.surname).toEqual 'rossi'
-        expect(testObj2.model.data.surname).toEqual 'rossi'
+    it 'defineAttributes with a tuple <name, type> should correctly set attribute', ->
+        FailObject.defineAttributes [
+            name: 'obj'
+            type: Object
+        ]
         
-        expect(testObj1.model).toEqual testObj2.model
+        # attrsOk = for attr in FailObject.attrNames when attr.name is 'obj'
+        # expect(attrOk.length).toBe(1)
+        
+        failObj = new FailObject
+        # expect(failObj.obj instanceof Object).toBeTruthy()
+        # expect(failObj.attributes.obj instanceof Object).toBeTruthy()
+    
+    # Fetch
+    it 'should not fetch if an objectId is not set', ->
+        expect(-> testObj.fetch() ).toThrow()
+    
+    
+    
         

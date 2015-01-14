@@ -12,12 +12,16 @@ angular
             op: (type, objects) ->
                 objs = if objects instanceof Array then objects else [objects]
                 
-                arr.__parseOps__.push
+                # Currently not supported
+                if @__parseOps__.length isnt 0
+                    throw new Error "NgParse Actually doesn't support multiple ops without a save() call between"
+                
+                @__parseOps__.push
                     '__op':     type, 
                     'objects':  objs
             
             push: ->
-                
+                @op 'add', arguments
                 Array.prototype.push.apply this, arguments
 
             
