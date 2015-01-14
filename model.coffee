@@ -32,7 +32,7 @@ angular
                                 new @class # Default initialization
                 
                 # NgParseStore listener
-                @updateListener() if id?
+                @updateListener() if id? and options.listen
                 
                 @initialize() if @initialize?
                 
@@ -60,7 +60,7 @@ angular
                     .then (savedObj) =>
                         ngParseStore.updateModel savedObj
                         console.log "Saved changes for #{@className}:#{@model.id}"
-                        @updateListener() if firstSave
+                        @updateListener() if firstSave 
                         savedObj
             
             fetch: -> 
