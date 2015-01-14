@@ -23,7 +23,8 @@ angular
                 if obj instanceof @class and obj in @models
                     @models.splice (@models.indexOf obj), 1
                 else if typeof obj is 'string'
-                    @models.splice index, 1 for model, index in @models when model.id is obj
+                    for model, index in @models when model.id is obj
+                        @models.splice index, 1 
                     
             fetch: ->
                 if not @query?
@@ -36,8 +37,6 @@ angular
                     .find()
                     .then (results) =>
                         @models = []
-                        console.log 'Found results for Collection: ' + @class.className
-                        console.log result for result in results
                         @models.push result for result in results
                         results
                     
