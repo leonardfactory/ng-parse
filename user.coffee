@@ -5,6 +5,13 @@ angular
             @class = Parse.User
             @className = '_User'
                 
+            constructor: (options = {}) ->
+                if options.current 
+                    options.model = @constructor.class.current()
+                    @current = yes
+                    
+                super options
+                
             signUp: ->
                 @model
                     .$signUp

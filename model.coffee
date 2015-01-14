@@ -26,6 +26,7 @@ angular
                 @model =    if id? and storeModel = ngParseStore.hasModel @className, id
                                 unless storeModel?
                                     throw new Error "Can't find a model with id #{id} in the store, even if an id has been passed."
+                                console.log "Found user with id: #{id}" if @className is '_User'
                                 storeModel
                             else
                                 new @class # Default initialization
@@ -45,10 +46,12 @@ angular
                 else if not @id?
                     throw new Error "Cannot register updates for a model without an id. ClassName: #{@className}"
                 else
-                    @_storeListener = ngParseStore.onUpdate @model, @updateModel
-                            
-            updateModel: =>
+                    @_storeListener = ngParseStore.onUpdate @model, @updateModel.bind @
+            
+            updateModel: ->
+                console.log "Updating model for #{@className}:#{@id}"
                 @model = ngParseStore.hasModel @className, @id
+                console.log @model
             
             save: -> 
                 firstSave = @isNew()
@@ -56,6 +59,7 @@ angular
                     .$save()
                     .then (savedObj) =>
                         ngParseStore.updateModel savedObj
+                        console.log "Saved changes for #{@className}:#{@model.id}"
                         @updateListener() if firstSave
                         savedObj
             
@@ -67,7 +71,8 @@ angular
                         fetchedObj
             
             # @todo propagate destroy
-            destroy: -> @model.$destroy()
+            destroy: -> 
+                @model.$destroy()
             
             Object.defineProperties @prototype,
                 'attributes':

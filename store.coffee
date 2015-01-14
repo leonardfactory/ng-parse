@@ -34,9 +34,15 @@ angular
             # Propagate a change in the model to all listening objects
             propagate: (anotherModel) ->
                 @trigger "change:#{anotherModel.className}:#{anotherModel.id}"
+                @trigger "change:_User:current" if anotherModel.isCurrentUser?()
                     
             # Events handler
             _.extend @prototype, Parse.Events
+            
+            # Special listener for current user
+            onCurrentUserUpdate: (fn) ->
+                @on "change:_User:current", fn
+                fn
             
             onUpdate: (model, fn) ->
                 @on "change:#{model.className}:#{model.id}", fn
