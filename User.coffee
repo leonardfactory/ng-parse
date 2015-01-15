@@ -1,6 +1,7 @@
 angular
     .module 'ngParse'
-    .factory 'NgParseUser', (NgParseObject, ngParseStore) ->
+    .factory 'NgParseUser', (NgParseObject) ->
+        
         # An NgParseUser is a special NgParseObject which provides special methods
         # to handle User persistance on Parse.com
         #
