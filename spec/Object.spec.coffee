@@ -40,7 +40,7 @@ describe 'NgParse.Object', ->
             testObj.should.not.have.property 'updatedAt'
     
         it 'extended object should have custom attributes defined', ->
-            TestObject.attrNames.should.contain 'testAttr'
+            TestObject.totalAttrNames.should.contain 'testAttr'
         
         it 'extended object should have getter for custom attributes', ->
             TestObject.prototype.should.have.ownProperty 'testAttr'
@@ -64,13 +64,21 @@ describe 'NgParse.Object', ->
                 name: 'obj'
                 type: Object
             ]
-        
-            attrOk = attr for attr in FailObject.attrNames when attr.name is 'obj'
+            
+            attrOk = attr for attr in FailObject.totalAttrNames when attr.name is 'obj'
             attrOk.name.should.be.equal 'obj'
+            
+            FailObject.totalAttrNames.should.have.length 4
+            FailObject.totalAttrNames.should.not.contain 'testAttr'
         
             failObj = new FailObject
+            failObj.should.have.property 'obj'
             failObj.obj.should.be.an.instanceof Object
             failObj.attributes.obj.should.be.an.instanceof Object
+            
+            failObj2 = new FailObject
+            failObj2.should.have.property 'obj'
+            failObj2.obj.should.not.be.equal failObj.obj
     
     # Get method.
     #

@@ -21,6 +21,10 @@ angular
                     'objectId'
             ]
             
+            # Total attrNames handled by @defineAttributes
+            #
+            @totalAttrNames = []
+            
             
             # Reserved attributes, which are special since they are handled by
             # Parse and no one can override their value.
@@ -42,8 +46,9 @@ angular
             #   attributes that the model is going to handle.
             #
             @defineAttributes: (attrNames) ->
-                @attrNames.push.apply @attrNames, attrNames
-                for attr in @attrNames
+                @totalAttrNames = _.clone(@totalAttrNames)
+                @totalAttrNames.push.apply @totalAttrNames, attrNames
+                for attr in attrNames
                     do (attr) =>
                         unless attr.name? is attr.type?
                             throw new Error "An attribute specified with a name should have a value and vice-versa"
@@ -55,7 +60,9 @@ angular
                             get: -> @attributes[attrName]
                             set: (value) -> @attributes[attrName] = value
                             
-                
+            # Run defineAttributes for actual attrNames
+            @defineAttributes @attrNames
+            
             # Create a new `NgParseObject`. Initialize the default attributes,
             # overwriting them with those passed as arguments
             #
@@ -66,7 +73,7 @@ angular
                 
                 # Instantiate default attributes value, overwrite them with passed attributes
                 @attributes = {}
-                for attr in @constructor.attrNames
+                for attr in @constructor.totalAttrNames
                     do (attr) =>
                         attrName    =   if attr.name? then attr.name else attr
                         attrValue   =   if attr.type? and not (attrName in @constructor.reservedAttrNames) and not attributes.hasOwnProperty attrName
@@ -75,7 +82,7 @@ angular
                                             attributes[attrName]
                                         else
                                             null
-                                            
+                        
                         @attributes[attrName] = attrValue if attrValue? # Not set attributes should be undefined, so they will not be sent to Parse.
                 
                 # Add inside ngParseStore
