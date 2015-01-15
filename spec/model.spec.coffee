@@ -23,74 +23,89 @@ describe 'NgParse.Object', ->
             testObj = new TestObject
     
     # Attributes
-    it 'should have standard attributes defined', ->
-        attrNames = for attr in TestObject.attrNames
-                        if attr.name? then attr.name else attr
+    #
+    describe 'Attributes', ->
+        
+        it 'should have standard attributes defined', ->
+            attrNames = for attr in TestObject.attrNames
+                            if attr.name? then attr.name else attr
                         
-        expect(attrNames).toContain 'createdAt'
-        expect(attrNames).toContain 'updatedAt'
-        expect(attrNames).toContain 'objectId'
+            attrNames.should.contain 'createdAt'
+            attrNames.should.contain 'updatedAt'
+            attrNames.should.contain 'objectId'
         
-    it 'instances should have standard attributes set to undefined', ->
-        expect(testObj.objectId).toBeUndefined()
-        expect(testObj.createdAt).toBeUndefined()
-        expect(testObj.updatedAt).toBeUndefined()
+        it 'instances should have standard attributes set to undefined', ->
+            testObj.should.not.have.property 'objectId'
+            testObj.should.not.have.property 'createdAt'
+            testObj.should.not.have.property 'updatedAt'
     
-    it 'extended object should have custom attributes defined', ->
-        expect(TestObject.attrNames).toContain 'testAttr'
+        it 'extended object should have custom attributes defined', ->
+            TestObject.attrNames.should.contain 'testAttr'
         
-    it 'extended object should have getter for custom attributes', ->
-        expect(TestObject.prototype.hasOwnProperty 'testAttr').toBeTruthy()
+        it 'extended object should have getter for custom attributes', ->
+            TestObject.prototype.should.have.ownProperty 'testAttr'
     
-    it 'extended object instances should get and set custom attributes', ->
-        testObj.objectId = "TestId"
-        expect(testObj.objectId).toEqual 'TestId'
-        expect(testObj.attributes.objectId).toEqual 'TestId'
+        it 'extended object instances should get and set custom attributes', ->
+            testObj.objectId = "TestId"
+            testObj.objectId.should.be.equal 'TestId'
+            testObj.attributes.objectId.should.be.equal 'TestId'
     
-    it 'extended object instance attributes should be undefined if not set', -> 
-        expect(testObj.attributes.testAttr).toBeUndefined()
+        it 'extended object instance attributes should be undefined if not set', -> 
+            testObj.attributes.should.not.have.property 'testAttr'
         
-    it 'defineAttributes with a tuple <name, type> should require type', ->
-        expect(-> FailObject.defineAttributes [{ name: 'wrongAttr' }]).toThrow()
+        it 'defineAttributes with a tuple <name, type> should require type', ->
+            (-> FailObject.defineAttributes [{ name: 'wrongAttr' }]).should.throw Error
         
-    it 'defineAttributes with a tuple <name, type> should require name', ->
-        expect(-> FailObject.defineAttributes [{ type: Object }]).toThrow()
+        it 'defineAttributes with a tuple <name, type> should require name', ->
+            (-> FailObject.defineAttributes [{ type: Object }]).should.throw Error
         
-    it 'defineAttributes with a tuple <name, type> should correctly set attribute', ->
-        FailObject.defineAttributes [
-            name: 'obj'
-            type: Object
-        ]
+        it 'defineAttributes with a tuple <name, type> should correctly set attribute', ->
+            FailObject.defineAttributes [
+                name: 'obj'
+                type: Object
+            ]
         
-        attrOk = attr for attr in FailObject.attrNames when attr.name is 'obj'
-        expect(attrOk.name).toBe 'obj'
+            attrOk = attr for attr in FailObject.attrNames when attr.name is 'obj'
+            attrOk.name.should.be.equal 'obj'
         
-        failObj = new FailObject
-        expect(failObj.obj instanceof Object).toBeTruthy()
-        expect(failObj.attributes.obj instanceof Object).toBeTruthy()
+            failObj = new FailObject
+            failObj.obj.should.be.an.instanceof Object
+            failObj.attributes.obj.should.be.an.instanceof Object
     
-    # -----------
     # Get method.
-    # -----------
-    
-    # Attributes as parameters
-    it 'objectId should be setted even on creation', ->
-        testObjGet = TestObject.get id: 'id'
-        expect(testObjGet.objectId).toEqual 'id'
-    
-    # Id
-    it 'objectId should be aliased as id', ->
-        testObj.id = 'Test_Id'
-        expect(testObj.objectId).toBe 'Test_Id'
-        expect(testObj.id).toBe 'Test_Id'
-        expect(testObj.attributes.objectId).toBe 'Test_Id'
+    #
+    describe 'Get', ->
+        # Attributes as parameters
+        it 'objectId should be setted even on creation', ->
+            testObjGet = TestObject.get id: 'id'
+            testObjGet.objectId.should.be.equal 'id'
         
-        testObj.objectId = 'Test_ObjectId'
-        expect(testObj.id).toBe 'Test_ObjectId'
+        it 'instances should be share data model when retrieved with get', ->
+            testObjGet  = TestObject.get id: 'id'
+            testObjGet2 = TestObject.get id: 'id'
+            testObjGet.should.be.equal testObjGet2
+    
+    
+    #Properties
+    #
+    describe 'Properties', ->
+        # Id
+        it 'objectId should be aliased as id', ->
+            testObj.id = 'Test_Id'
+            testObj.objectId.should.be.equal 'Test_Id'
+            testObj.id.should.be.equal 'Test_Id'
+            testObj.attributes.objectId.should.be.equal 'Test_Id'
+        
+            testObj.objectId = 'Test_ObjectId'
+            testObj.id.should.be.equal 'Test_ObjectId'
+    
     
     # Fetch
-    it 'should not fetch if an objectId is not set', ->
-        expect(-> testObj.fetch() ).toThrow()
+    #
+    describe 'Fetch', ->
+        
+        it 'should not fetch if an objectId is not set', ->
+            (-> testObj.fetch() ).should.throw Error
     
     
     

@@ -1,6 +1,6 @@
 angular
     .module 'ngParse'
-    .factory 'NgParseObject', ($q, ngParseStore, NgParseDate) ->
+    .factory 'NgParseObject', ($q, ngParseStore, NgParseRequest, NgParseDate) ->
         # An NgParseObject is an utility class for all objects backed up by Parse.
         #
         # It's necessary to extend `NgParseObject` with custom attributes for each
@@ -84,6 +84,18 @@ angular
             fetch: ->
                 if not @objectId
                     throw new Error "Unable to fetch an NgParseObject without and id provided. Class: #{@className}"
+                    
+                request = new NgParseRequest    objectId: @objectId
+                                                className: @className
+                                                method: 'GET'
+                                                type: NgParseRequest.Type.Resource
+                
+                request
+                    .perform()
+                    .success (result) ->
+                        console.log result
+                    .error (error) ->
+                        throw new Error error
             
             
             # Gets an instance of this `NgParseObject` using the **factory** pattern.
