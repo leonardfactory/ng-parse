@@ -25,7 +25,7 @@ angular
                 
                 classModels[anotherModel.id] = anotherModel
                     
-                @propagate anotherModel if found # Propagate replacement if necessary
+                 #@propagate anotherModel if found # Propagate replacement if necessary
                 
                 # console.log "Registered update for model #{anotherModel.className}:#{anotherModel.id} (found? #{found})"
                 
@@ -36,7 +36,7 @@ angular
                 @trigger "change:#{anotherModel.className}:#{anotherModel.id}"
                 @triggerCurrentUserUpdate() if anotherModel.isCurrentUser?()
                 
-            #
+            # 
             triggerCurrentUserUpdate: ->
                 @trigger "change:_User:current"
                     

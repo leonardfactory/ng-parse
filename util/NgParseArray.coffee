@@ -23,5 +23,12 @@ angular
             push: ->
                 @op 'add', arguments
                 Array.prototype.push.apply this, arguments
+                
+            # Required for Parse serialization
+            toParseJSON: ->
+                if @__parseOps__.length is 0
+                    null
+                else
+                    @__parseOps__[0] 
 
             
