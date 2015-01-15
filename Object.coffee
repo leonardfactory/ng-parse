@@ -58,7 +58,9 @@ angular
                         
                         Object.defineProperty @prototype, attrName,
                             get: -> @attributes[attrName]
-                            set: (value) -> @attributes[attrName] = value
+                            set: (value) -> 
+                                @dirty.push attrName
+                                @attributes[attrName] = value
                             
             # Run defineAttributes for actual attrNames
             @defineAttributes @attrNames
@@ -84,25 +86,128 @@ angular
                                             null
                         
                         @attributes[attrName] = attrValue if attrValue? # Not set attributes should be undefined, so they will not be sent to Parse.
+                        
+                # Save attribute names that are 'dirty', a.k.a. changed after the last save.
+                @dirty = []
                 
                 # Add inside ngParseStore
                 ngParseStore.updateModel this if @objectId?
                 
+            # Parse server response in order to update current model
+            #
+            # @param {Object} attributes key-value set of attributes
+            #
+            _updateWithAttributes: (attributes = {}) ->
+                for attr in @constructor.totalAttrNames
+                    do (attr) =>
+                        attrName = attr.name ? attr
+                        # Update only those attributes which are present in the response
+                        if attributes.hasOwnProperty attrName
+                            # Simple attribute
+                            if typeof attr is 'string'
+                                @attributes[attrName] = attributes[attrName] ? null
+                            else
+                                @attributes[attrName] = attr.type.fromParseJSON attributes[attrName]
+                                
+            # Elaborate JSON to send to Parse
+            #
+            # @return {Object} JSON converted object for parse
+            #
+            _toParseJSON: ->
+                obj = {}
+                
+                for attr in @constructor.totalAttrNames
+                    do (attr) =>
+                        attrName = attr.name ? attr
+                        
+                        isDirty = attrName in @dirty or (attr.type? and @attributes[attrName]? and @attributes[attrName].__parseOps__.length > 0)
+                        
+                        # Send to Parse only not reserved fields. furthermore, if the field
+                        # is not different from fetch, don't send it
+                        unless attrName in @constructor.reservedAttrNames or not isDirty
+                            if typeof attr is 'string'
+                                val = @attributes[attrName] ? null
+                            else
+                                val = if @attributes[attrName]? then @attributes[attrName].toParseJSON() else null
+                            
+                            # send only fields with a value
+                            obj[attrName] = val if val?
+                    
+                obj
+                            
+            # Reset Parse `Ops` so that we are not going to send the same changes 
+            # to the server
+            #
+            #
+            _resetOps: ->
+                @dirty = []
+                
+                for attr in @constructor.totalAttrNames
+                    do (attr) =>
+                        # Ops can be resetted only for parse types
+                        if typeof attr isnt 'string' and @attributes[attr.name]?
+                            @attributes[attr.name]._resetParseOps?()               
+                        
+            
+            # Fetch the current object based on its id
+            #
+            # @return {Promise} $q promise
+            #
             fetch: ->
                 if not @objectId
-                    throw new Error "Unable to fetch an NgParseObject without and id provided. Class: #{@className}"
+                    throw new Error "Unable to fetch an NgParseObject without an id provided. Class: #{@className}"
                     
-                request = new NgParseRequest    objectId: @objectId
-                                                className: @className
-                                                method: 'GET'
-                                                type: NgParseRequest.Type.Resource
+                request = new NgParseRequest
+                                    objectId: @objectId 
+                                    className: @className 
+                                    method: 'GET' 
+                                    type: NgParseRequest.Type.Resource
                 
+                deferred = $q.defer()
                 request
                     .perform()
-                    .success (result) ->
-                        console.log result
-                    .error (error) ->
-                        throw new Error error
+                    .success (result) =>
+                        @_updateWithAttributes result
+                        deferred.resolve @
+                    .error (error) =>
+                        deferred.reject error
+                
+                deferred.promise
+            
+            
+            # Save an object storing it on Parse.
+            # Behave differently if the object is new or we are just updating
+            #
+            # @return {Promise} $q promise
+            #
+            save: ->
+                if @isNew
+                    # Create
+                    request = new NgParseRequest
+                                    className: @className
+                                    method: 'POST'
+                                    data: @_toParseJSON()
+                                    type: NgParseRequest.Type.Resource
+                else
+                    # Update
+                    request = new NgParseRequest
+                                    objectId: @objectId
+                                    className: @className
+                                    data: @_toParseJSON()
+                                    method: 'PUT'
+                                    type: NgParseRequest.Type.Resource
+                
+                deferred = $q.defer()
+                request
+                    .perform()
+                    .success (result) =>
+                        @_updateWithAttributes result
+                        @_resetOps()
+                        deferred.resolve @
+                    .error (error) =>
+                        deferred.reject error
+                        
+                deferred.promise
             
             
             # Gets an instance of this `NgParseObject` using the **factory** pattern.
@@ -129,6 +234,6 @@ angular
                     set: (id) -> @objectId = id
                 
                 isNew:
-                    get: -> @objectId?
+                    get: -> not @objectId?
                 
             
