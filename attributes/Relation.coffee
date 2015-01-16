@@ -7,6 +7,7 @@ angular
                 @className = options.className ? ''
                 @class = options.class ? NgParseObject
                 @__parseOps__ = [] # Parse Ops support
+                @_parentObject = null
             
             # Analyze passed objects. If `objects` is not an Array, convert it.
             # Furthermore check each object to be sure that it's an NgParseObject
@@ -53,6 +54,15 @@ angular
                 @__parseOps__.push
                     '__op': 'RemoveRelation'
                     'objects': obj._toPointer() for obj in objs
+            
+            # Set parent object in order to retrieve a query for this Relation.
+            #
+            # This is necessary since Parse Queries require to be built specifying:
+            #   * `className` of the objects to fetch (@className)
+            #   * object `$relatedTo` as a Pointer.
+            #
+            _setObject: (object) ->
+                @_parentObject = object
             
             # Derive Relation type (a.k.a. className) from JSON response
             #

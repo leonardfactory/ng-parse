@@ -79,12 +79,15 @@ angular
                     do (attr) =>
                         attrName    =   if attr.name? then attr.name else attr
                         attrValue   =   if attr.type? and not (attrName in @constructor.reservedAttrNames) and not attributes.hasOwnProperty attrName
-                                            new attr.type 
+                                            new attr.type
                                         else if attributes.hasOwnProperty attrName
                                             attributes[attrName] # todo: use fromParseJSON ?
                                         else
                                             null
-                        
+                                            
+                        # Set object if required by attribute, i.e. a NgParse.Relation
+                        attrValue._setObject @ if attrValue?._setObject?
+                            
                         @attributes[attrName] = attrValue if attrValue? # Not set attributes should be undefined, so they will not be sent to Parse.
                         
                 # Save attribute names that are 'dirty', a.k.a. changed after the last save.
@@ -108,6 +111,7 @@ angular
                                 @attributes[attrName] = attributes[attrName] ? null
                             else
                                 @attributes[attrName] = attr.type.fromParseJSON attributes[attrName]
+                                @attributes[attrName]._setObject @ if @attributes[attrName]?._setObject?
                                 
             # Elaborate JSON to send to Parse
             #
