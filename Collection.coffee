@@ -2,9 +2,10 @@ angular
     .module 'ngParse'
     .factory 'NgParseCollection', ($q, NgParseObject, NgParseQuery) ->
         class NgParseCollection
+            
             constructor: (options = {}) ->
                 @class  = options.class ? NgParseObject
-                @query  = options.query ? new NgParseQuery @class, new Parse.Query(@class.class)
+                @query  = options.query ? new NgParseQuery class: @class
                 @models = []
             
             add: (obj) ->
@@ -39,7 +40,3 @@ angular
                         @models = []
                         @models.push result for result in results
                         results
-                    
-            
-            
-        NgParseCollection

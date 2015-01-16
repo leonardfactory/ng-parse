@@ -48,6 +48,7 @@ angular
             @defineAttributes: (attrNames) ->
                 @totalAttrNames = _.clone(@totalAttrNames)
                 @totalAttrNames.push.apply @totalAttrNames, attrNames
+
                 for attr in attrNames
                     do (attr) =>
                         unless attr.name? is attr.type?

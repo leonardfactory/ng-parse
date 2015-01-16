@@ -1,6 +1,6 @@
 angular
     .module 'ngParse'
-    .factory 'NgParseUser', ($q, NgParseObject, NgParseRequest, ngParseRequestConfig, locker) ->
+    .factory 'NgParseUser', ($q, NgParseObject, NgParseRequest, ngParseRequestConfig, ngParseClassStore, locker) ->
         
         # An NgParseUser is a special NgParseObject which provides special methods
         # to handle User persistance on Parse.com
@@ -103,7 +103,11 @@ angular
             @checkIfLogged: ->
                 if locker.driver('local').namespace('ngParse').has 'currentUser'
                     currentUser = locker.driver('local').namespace('ngParse').get 'currentUser'
-                    @current = new @
+                    
+                    # Get class which registered for '_User'
+                    userClass = ngParseClassStore.getClass '_User'
+                    
+                    @current = new userClass
                     @current._sessionToken = currentUser.sessionToken
                     
                     @current
