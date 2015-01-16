@@ -6,7 +6,14 @@ describe 'NgParse.User', ->
     $http = null
     
     beforeEach ->
-        angular.mock.module 'ngParse'
+        angular.mock.module 'ngParse', ($provide) ->
+            $provide.value 'ngParseRequestConfig',
+                appId: 'appId'
+                restApiKey: 'restApiKey'
+                parseUrl: '/'
+            
+            # Extremely important in order to avoid bad errors caused by CoffeeScript.
+            return
         
         inject (_NgParseUser_, $injector) ->
             NgParseUser     = _NgParseUser_
@@ -34,7 +41,7 @@ describe 'NgParse.User', ->
         
         beforeEach ->
             $httpBackend
-                .when 'PUT', "#{NgParseRequest.parseUrl}users/user_id"
+                .when 'PUT', "/users/user_id"
                 .respond
                     objectId: 'user_id'
                     
@@ -43,7 +50,7 @@ describe 'NgParse.User', ->
             user.username = 'mario'
             user.dirty.should.have.members ['username']
             
-            $httpBackend.expectPUT "#{NgParseRequest.parseUrl}users/user_id"
+            $httpBackend.expectPUT "/users/user_id"
             user.save()
             $httpBackend.flush()
             

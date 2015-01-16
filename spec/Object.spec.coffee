@@ -5,6 +5,7 @@ describe 'NgParse.Object', ->
     NgParseRequest = null
     NgParseArray = null
     NgParseDate = null
+    NgParseRelation = null
     TestObject = null
     FailObject = null
     testObj = null
@@ -12,12 +13,21 @@ describe 'NgParse.Object', ->
     $http = null
     
     beforeEach -> 
-        angular.mock.module 'ngParse'
+        angular.mock.module 'ngParse', ($provide) ->
+            $provide.value 'ngParseRequestConfig',
+                appId: 'appId'
+                restApiKey: 'restApiKey'
+                parseUrl: '/'
+            
+            # Extremely important in order to avoid bad errors caused by CoffeeScript.
+            return
+            
         inject (NgParseObject, _NgParseRequest_, _NgParseArray_, _NgParseDate_, $injector) ->
             NgObject = NgParseObject
             NgParseRequest = _NgParseRequest_
             NgParseArray = _NgParseArray_
             NgParseDate = _NgParseDate_
+            NgParseRelation = $injector.get 'NgParseRelation'
             
             $httpBackend    = $injector.get '$httpBackend'
             $http           = $injector.get '$http'
@@ -104,7 +114,7 @@ describe 'NgParse.Object', ->
             testObjGet2 = TestObject.get id: 'id'
             testObjGet.should.be.equal testObjGet2
     
-    #Properties
+    # Properties
     #
     describe 'Properties', ->
         # Id
@@ -116,6 +126,20 @@ describe 'NgParse.Object', ->
         
             testObj.objectId = 'Test_ObjectId'
             testObj.id.should.be.equal 'Test_ObjectId'
+            
+    # Convertions
+    describe 'Convertions', ->
+        
+        it 'should be converted to a Pointer with correct properties', ->
+            testObj.id = 'TestId'
+            testObj.className.should.be.equal 'Test'
+            
+            pointer = testObj._toPointer()
+            
+            pointer.should.have.keys ['objectId', 'className', '__type']
+            pointer.__type.should.be.equal 'Pointer'
+            pointer.className.should.be.equal 'Test'
+            pointer.objectId.should.be.equal 'TestId'
     
     # Request to the server and relative parsing
     #
@@ -123,6 +147,8 @@ describe 'NgParse.Object', ->
         
         fetchObj = null
         FetchObject = null
+        relObj = null
+        RelObject = null
         date = null
         
         beforeEach ->
@@ -133,26 +159,42 @@ describe 'NgParse.Object', ->
                     class _FetchObject extends NgObject
                         @className = 'Fetch'
                         @defineAttributes [ { name: 'arr', type: NgParseArray }, 'test' ]
+                        
+                RelObject = 
+                    class _RelObject extends NgObject
+                        @className = 'Rel'
+                        @defineAttributes [ { name: 'rel', type: NgParseRelation } ]      
+                
                 
                 fetchObj = new FetchObject objectId: 'test_id'
+                relObj = new RelObject objectId: 'test_id'
                 
                 date = moment '2010-12-25'
                 
                 # Fake backend
                 $httpBackend
-                    .when 'GET', "#{NgParseRequest.parseUrl}classes/Fetch/test_id"
+                    .when 'GET', "/classes/Fetch/test_id"
                     .respond
                         objectId: 'test_id'
                         arr: [ 'arr1', 'arr2' ]
                         createdAt: date.format()
+                        
+                $httpBackend
+                    .when 'GET', "/classes/Rel/test_id"
+                    .respond
+                        objectId: 'test_id'
+                        rel:
+                            __type: 'Relation'
+                            className: 'Rel'
+                        createdAt: date.format()
                 
                 $httpBackend
-                    .when 'PUT', "#{NgParseRequest.parseUrl}classes/Fetch/new_id"
+                    .when 'PUT', "/classes/Fetch/new_id"
                     .respond
                         objectId: 'new_id'
                         
                 $httpBackend
-                    .when 'POST', "#{NgParseRequest.parseUrl}classes/Fetch/"
+                    .when 'POST', "/classes/Fetch/"
                     .respond
                         objectId: 'new_id'
                         createdAt: date.format()
@@ -171,8 +213,8 @@ describe 'NgParse.Object', ->
             it 'should not throw if object has objectId and className set', ->
                 (-> fetchObj.fetch() ).should.not.throw
         
-            it 'should fetch and parse serve response even with NgParse.Array or NgParse.Date', ->
-                $httpBackend.expectGET "#{NgParseRequest.parseUrl}classes/Fetch/test_id"
+            it 'should fetch and parse server response even with NgParse.Array or NgParse.Date', ->
+                $httpBackend.expectGET "/classes/Fetch/test_id"
                 fetchObj.fetch()
                 $httpBackend.flush()
             
@@ -187,8 +229,18 @@ describe 'NgParse.Object', ->
             
                 should.not.exist fetchObj.updatedAt # null
             
+            it 'should fetch and parse NgParse.Relation', ->
+                $httpBackend.expectGET "/classes/Rel/test_id"
+                relObj.fetch()
+                $httpBackend.flush()
+                
+                relObj.objectId.should.be.equal 'test_id'
+                relObj.rel.should.be.an.instanceof NgParseRelation
+                relObj.rel.className.should.be.equal 'Rel'
+                
+            
             it 'should not have dirties field after a fetch', ->
-                $httpBackend.expectGET "#{NgParseRequest.parseUrl}classes/Fetch/test_id"
+                $httpBackend.expectGET "/classes/Fetch/test_id"
                 fetchObj.fetch()
                 $httpBackend.flush()
                 
@@ -205,7 +257,7 @@ describe 'NgParse.Object', ->
                 newObj.arr.__parseOps__.should.have.length 1
                 newObj.isNew.should.be.true
                 
-                $httpBackend.expectPOST "#{NgParseRequest.parseUrl}classes/Fetch/"
+                $httpBackend.expectPOST "/classes/Fetch/"
                 newObj.save()
                 $httpBackend.flush()
                 
@@ -223,7 +275,7 @@ describe 'NgParse.Object', ->
                 updateObj.arr.__parseOps__.should.have.length 1
                 updateObj.isNew.should.be.false
                 
-                $httpBackend.expectPUT "#{NgParseRequest.parseUrl}classes/Fetch/new_id"
+                $httpBackend.expectPUT "/classes/Fetch/new_id"
                 updateObj.save()
                 $httpBackend.flush()
                 
@@ -243,12 +295,30 @@ describe 'NgParse.Object', ->
                 updateObj = new FetchObject objectId: 'new_id'
                 updateObj.arr.push 'element'
                 
-                $httpBackend.expectPUT "#{NgParseRequest.parseUrl}classes/Fetch/new_id"
+                $httpBackend.expectPUT "/classes/Fetch/new_id"
                 updateObj.save()
                 $httpBackend.flush()
                 
                 json = updateObj._toParseJSON()
                 json.should.not.have.keys ['arr']
+                
+            it 'should have dirty fields for an attr of type NgParse.Relation', ->
+                updateObj = new RelObject objectId: 'new_id'
+                updateObj.rel.add updateObj
+            
+                json = updateObj._toParseJSON()
+                json.should.have.keys ['rel']
+                
+            it 'should have no dirty fields after a save for an attr of type NgParse.Relation', ->
+                updateObj = new RelObject
+                updateObj.rel.remove relObj
+                
+                $httpBackend.expectPOST( "/classes/Rel/" ).respond(200, {})
+                updateObj.save()
+                $httpBackend.flush()
+                
+                json = updateObj._toParseJSON()
+                json.should.not.have.keys ['rel']
             
             it 'should have dirty fields when using setter', ->
                 updateObj = new FetchObject objectId: 'new_id'
@@ -262,7 +332,7 @@ describe 'NgParse.Object', ->
                 updateObj = new FetchObject objectId: 'new_id'
                 updateObj.test = 'value'
                 
-                $httpBackend.expectPUT "#{NgParseRequest.parseUrl}classes/Fetch/new_id"
+                $httpBackend.expectPUT "/classes/Fetch/new_id"
                 updateObj.save()
                 $httpBackend.flush()
                 

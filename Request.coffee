@@ -1,12 +1,13 @@
 angular
     .module 'ngParse'
-    .factory 'NgParseRequest', ($q, $http) ->
+    .service 'ngParseRequestConfig', ->
+        parseUrl: 'https://api.parse.com/1/'
+        appId: ''
+        restApiKey: ''
+        sessionToken: null
+        
+    .factory 'NgParseRequest', ($q, $http, ngParseRequestConfig) ->
         class NgParseRequest
-            
-            @appId = ''
-            @restApiKey = ''
-            
-            @parseUrl = 'https://api.parse.com/1/'
             
             # Enum for request type, i.e. to CloudCode or Resource
             #
@@ -39,16 +40,24 @@ angular
                     # Add `id` if getting a resource
                     if options.method isnt 'POST' and @type is @constructor.Type.Resource
                         @url = "#{@url}#{options.objectId}"
+                        
+                else if @type is @constructor.Type.Other
+                    unless options.url?
+                        throw new Error "Can't process a custom request without a specified url"
+                        
+                    @url = options.url
                     
                 
                 @httpConfig = 
                     method: @method
-                    url: @constructor.parseUrl + @url
+                    url: ngParseRequestConfig.parseUrl + @url
                     headers:
-                        'X-Parse-Application-Id': @constructor.appId
-                        'X-Parse-REST-API-Key': @constructor.restApiKey
+                        'X-Parse-Application-Id': ngParseRequestConfig.appId
+                        'X-Parse-REST-API-Key': ngParseRequestConfig.restApiKey
                     params: if @method is 'GET' then options.params ? null else null
                     data: if @method isnt 'GET' then options.data ? null else null
+                    
+                @httpConfig.headers['X-Parse-Session-Token'] = ngParseRequestConfig.sessionToken if ngParseRequestConfig.sessionToken?
                 
             # Factory pattern to create Requests
             #

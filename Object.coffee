@@ -81,7 +81,7 @@ angular
                         attrValue   =   if attr.type? and not (attrName in @constructor.reservedAttrNames) and not attributes.hasOwnProperty attrName
                                             new attr.type 
                                         else if attributes.hasOwnProperty attrName
-                                            attributes[attrName]
+                                            attributes[attrName] # todo: use fromParseJSON ?
                                         else
                                             null
                         
@@ -134,6 +134,15 @@ angular
                             obj[attrName] = val if val?
                     
                 obj
+                
+            # Convert the object in a reference (`Pointer`)
+            #
+            # @return {Object} Pointer representation of this
+            #
+            _toPointer: ->
+                __type: 'Pointer'
+                className: @className
+                objectId: @objectId
                             
             # Reset Parse `Ops` so that we are not going to send the same changes 
             # to the server

@@ -6,9 +6,17 @@ describe 'NgParse.Request', ->
     queryOptions = null
     
     beforeEach ->
-        angular.mock.module 'ngParse'
+        angular.mock.module 'ngParse', ($provide) ->
+            $provide.value 'ngParseRequestConfig',
+                appId: 'appId'
+                restApiKey: 'restApiKey'
+                parseUrl: '/'
+            
+            # Extremely important in order to avoid bad errors caused by CoffeeScript.
+            return
+            
         
-        inject (_NgParseRequest_) ->
+        inject (ngParseRequestConfig, _NgParseRequest_) ->
             NgParseRequest = _NgParseRequest_
             
             # Fake API Keys
@@ -47,11 +55,11 @@ describe 'NgParse.Request', ->
             request.httpConfig.headers['X-Parse-Application-Id'].should.be.equal 'appId'
             request.httpConfig.headers['X-Parse-REST-API-Key'].should.be.equal 'restApiKey'
             
-            request.httpConfig.url.should.be.equal "#{NgParseRequest.parseUrl}classes/TestClass/test_id"
+            request.httpConfig.url.should.be.equal "/classes/TestClass/test_id"
             
         it 'should handle User class correctly', ->
             request = new NgParseRequest userOptions
-            request.httpConfig.url.should.be.equal "#{NgParseRequest.parseUrl}users/test_user_id"
+            request.httpConfig.url.should.be.equal "/users/test_user_id"
             
         it 'should not allow Queries without GET method', ->
             wrongOptions =
@@ -65,7 +73,7 @@ describe 'NgParse.Request', ->
             (-> request = new NgParseRequest queryOptions).should.not.throw
             
             request = new NgParseRequest queryOptions
-            request.httpConfig.url.should.be.equal "#{NgParseRequest.parseUrl}classes/TestClass/"
+            request.httpConfig.url.should.be.equal "/classes/TestClass/"
                 
     # Create accessor
     describe 'Create', ->
