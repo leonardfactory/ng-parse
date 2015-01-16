@@ -75,12 +75,26 @@ describe 'NgParse.Request', ->
             request = new NgParseRequest userOptions
             request.httpConfig.url.should.be.equal "/users/test_user_id"
             
+        it 'should not allow fetching Resource without className set', ->
+            wrongOptions =
+                method: 'GET'
+                type: NgParseRequest.Type.Resource
+                objectId: 'test_id'
+            
+            (-> new NgParseRequest wrongOptions).should.throw Error
+            
         it 'should not allow Queries without GET method', ->
             wrongOptions =
                 method: 'POST'
                 type: NgParseRequest.Type.Query
                 className: 'TestClass'
             
+            (-> new NgParseRequest wrongOptions).should.throw Error
+            
+        it 'should not allow Queries without className set', ->
+            wrongOptions =
+                method: 'GET'
+                type: NgParseRequest.Type.Query
             (-> new NgParseRequest wrongOptions).should.throw Error
         
         it 'should allow Queries with GET method', ->

@@ -34,6 +34,10 @@ angular
                     throw new Error "Can't process a query with a method different from GET"
                 
                 if @type is @constructor.Type.Resource or @type is @constructor.Type.Query
+                    
+                    unless options.className?
+                        throw new Error "Can't create a NgParseRequest for a `Resource` or a `Query` without specifying a `className`"
+                    
                     # Handle `_User` special case
                     if options.className is '_User'
                         @url = "users/"

@@ -1,6 +1,6 @@
 angular
     .module 'ngParse'
-    .factory 'NgParseObject', ($q, ngParseStore, NgParseRequest, NgParseDate) ->
+    .factory 'NgParseObject', ($q, ngParseStore, ngParseClassStore, NgParseRequest, NgParseDate) ->
         # An NgParseObject is an utility class for all objects backed up by Parse.
         #
         # It's necessary to extend `NgParseObject` with custom attributes for each
@@ -64,6 +64,13 @@ angular
                             
             # Run defineAttributes for actual attrNames
             @defineAttributes @attrNames
+            
+            # Register a className for this Class. This is useful in order to instantiate correct objects
+            # while fetching or doing a query.
+            #
+            @registerForClassName: (className) ->
+                @className = className
+                ngParseClassStore.registerClass className, @
             
             # Create a new `NgParseObject`. Initialize the default attributes,
             # overwriting them with those passed as arguments

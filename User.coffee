@@ -9,8 +9,8 @@ angular
         #
         class NgParseUser extends NgParseObject
             
-            @className = '_User'
-            
+            @registerForClassName '_User'
+
             @defineAttributes ['username', 'password', 'email']    
                 
             constructor: (attributes = {}) ->
