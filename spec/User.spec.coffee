@@ -120,12 +120,12 @@ describe 'NgParse.User', ->
             $httpBackend.flush()
             
         it 'should remove `current` static variable and updating `logged` static property', ->
-            NgParseUser.logged.should.be.true
+            NgParseUser.logged().should.be.true
             
             NgParseUser.logout()
             should.not.exist NgParseUser.current
             
-            NgParseUser.logged.should.be.false
+            NgParseUser.logged().should.be.false
         
         it 'should remove sessionToken', ->
             NgParseUser.logout()
@@ -171,7 +171,7 @@ describe 'NgParse.User', ->
             NgParseUser.current.should.not.be.null
             NgParseUser.current.objectId.should.be.equal 'user_id'
             NgParseUser.current._sessionToken.should.be.equal 'testToken'
-            NgParseUser.logged.should.be.true
+            NgParseUser.logged().should.be.true
             
             ngParseRequestConfig.sessionToken.should.be.equal 'testToken'
             

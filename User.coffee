@@ -37,8 +37,7 @@ angular
             
             # Specify if an user is currently logged-in
             #
-            Object.defineProperty @, 'logged',
-                get: -> @current?
+            @logged: -> @current?
             
             # Login to the server
             #
