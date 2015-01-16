@@ -6,7 +6,13 @@ angular
             constructor: (options = {}) ->
                 @className = options.className ? ''
                 @class = options.class ? (ngParseClassStore.getClass @className) ? NgParseObject
-                @__parseOps__ = [] # Parse Ops support
+                
+                # Name provided by definition. It is important in order to obtain a valid query for fetching
+                # objects related to parentObject.
+                @name = options.name    
+                
+                # Parse Ops support
+                @__parseOps__ = []
                 @_parentObject = null
             
             # Analyze passed objects. If `objects` is not an Array, convert it.
@@ -58,7 +64,13 @@ angular
             # Get a query for this relationship
             #
             query: ->
-                new NgParseQuery 
+                unless @_parentObject?
+                    throw new Error "Can't get a query if parentObject has not been set"
+                    
+                NgParseQuery 
+                    .create class: @class
+                    .where
+                    .relatedTo @name, @_parentObject
             
             # Set parent object in order to retrieve a query for this Relation.
             #
@@ -78,7 +90,7 @@ angular
                 unless obj.__type? and obj.__type is 'Relation'
                     throw new Error "Cannot create a NgParse.Relation for a non-Relation attribute"
                     
-                new @ className: obj.className ? definition.className
+                new @ className: obj.className ? definition.className, name: definition.name
             
             toParseJSON: ->
                 if @__parseOps__.length is 0

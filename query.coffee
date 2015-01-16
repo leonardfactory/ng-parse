@@ -13,6 +13,9 @@ angular
                     
                 # Query constraints
                 @_constraints = {}
+                
+            @create: (options = {}) ->
+                new @ options
             
             # Execute the query with a `find`.
             # This will return an array of objects matching the current query

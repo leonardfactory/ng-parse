@@ -238,6 +238,13 @@ describe 'NgParse.Object', ->
                 relObj.rel.should.be.an.instanceof NgParseRelation
                 relObj.rel.className.should.be.equal 'Rel'
                 
+                (-> relObj.rel.query() ).should.not.throw
+                
+                query = relObj.rel.query()
+                query._constraints.where.should.have.property '$relatedTo'
+                query._constraints.where.$relatedTo.key.should.be.equal 'rel'
+                query._constraints.where.$relatedTo.object.should.be.deep.equal relObj._toPointer()
+                
             
             it 'should not have dirties field after a fetch', ->
                 $httpBackend.expectGET "/classes/Fetch/test_id"

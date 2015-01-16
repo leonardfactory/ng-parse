@@ -18,7 +18,7 @@ describe 'NgParse.Relation', ->
                     @registerForClassName 'Test'
                     @defineAttributes [ 'test', { name: 'rel', type: NgParseRelation, className: 'Test' } ]
                     
-            rel = new NgParseRelation className: 'Test'
+            rel = new NgParseRelation className: 'Test', name: 'rel'
                 
             testObj = new TestObject objectId: 'test_id'
         
@@ -77,10 +77,12 @@ describe 'NgParse.Relation', ->
         (-> rel.add obj).should.throw
     
     it 'should unserialize correctly from parse JSON', ->
-        jsonRel = NgParseRelation.fromParseJSON
-                                        __type: 'Relation',
-                                        className: 'Test'
+        jsonRel = NgParseRelation.fromParseJSON {
+                                        __type: 'Relation'
+                                        className: 'Test' },
+                                        name: 'rel'
         
+        jsonRel.name.should.be.equal 'rel'
         jsonRel.className.should.be.equal 'Test'
         jsonRel.__parseOps__.should.be.empty
     
@@ -103,3 +105,13 @@ describe 'NgParse.Relation', ->
             
     it 'should refer to correct class', ->
         rel.class.should.be.equal TestObject
+            
+    it 'should retrieve a Query relative to right class', ->
+        obj = new TestObject objectId: 'obj_id'
+        rel._setObject obj
+        query = rel.query()
+        
+        query._constraints.where.should.have.property '$relatedTo'
+        query._constraints.where.$relatedTo.should.have.keys ['object', 'key']
+        query._constraints.where.$relatedTo.key.should.be.equal 'rel'
+        query._constraints.where.$relatedTo.object.should.be.deep.equal obj._toPointer()
