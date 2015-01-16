@@ -51,7 +51,22 @@ angular
                 
                 if _.size(@_constraints) > 0
                     params = _.clone(@_constraints)
-                console.log @_constraints
+                    
+                    # Check for 'or' queries
+                    #
+                    if @_orWhereConstraints?
+                        
+                        # Push latest where constraints chain. It is not yet joined, because
+                        # usually the join is computed by `or`.
+                        # However, nobody wants to terminate its query with `or`!
+                        #
+                        if _.size(@_constraints.where)
+                            @_orWhereConstraints.push _.clone(@_constraints.where) 
+                            @_constraints.where = {}
+                            
+                        params.where = 
+                            $or: @_orWhereConstraints
+
                 params
                     
                     
@@ -68,6 +83,22 @@ angular
                     get: ->
                         @_constraints.where =  @_constraints.where ? {}
                         @
+                        
+                # Simple expression-joiner to make the query statement more readable
+                and:
+                    get: -> @
+                    
+                # Create an $or query.
+                #
+                or: ->
+                    @_orWhereConstraints = @_orWhereConstraints ? [] # Store where constraints as an array
+                    @_orWhereConstraints.push _.clone(@_constraints.where)
+                    
+                    # Reset
+                    @_constraints.where = {} 
+                    @_currentAttr = null
+                    
+                    @
             
             # Sets current attribute so that chained comparator can operate on it.
             # 
