@@ -82,24 +82,24 @@ describe 'NgParse.Object', ->
         
         it 'defineAttributes with a tuple <name, type> should correctly set attribute', ->
             FailObject.defineAttributes [
-                name: 'obj'
-                type: Object
+                name: 'arr'
+                type: NgParseArray
             ]
             
-            attrOk = attr for attr in FailObject.totalAttrNames when attr.name is 'obj'
-            attrOk.name.should.be.equal 'obj'
+            attrOk = attr for attr in FailObject.totalAttrNames when attr.name is 'arr'
+            attrOk.name.should.be.equal 'arr'
             
             FailObject.totalAttrNames.should.have.length 4
             FailObject.totalAttrNames.should.not.contain 'testAttr'
         
             failObj = new FailObject
-            failObj.should.have.property 'obj'
-            failObj.obj.should.be.an.instanceof Object
-            failObj.attributes.obj.should.be.an.instanceof Object
+            failObj.should.have.property 'arr'
+            failObj.arr.should.be.an.instanceof NgParseArray
+            failObj.attributes.arr.should.be.an.instanceof NgParseArray
             
             failObj2 = new FailObject
-            failObj2.should.have.property 'obj'
-            failObj2.obj.should.not.be.equal failObj.obj
+            failObj2.should.have.property 'arr'
+            failObj2.arr.should.not.be.equal failObj.arr
     
     # Get method.
     #
@@ -157,13 +157,13 @@ describe 'NgParse.Object', ->
                 # Fetch Object class
                 FetchObject =
                     class _FetchObject extends NgObject
-                        @className = 'Fetch'
+                        @registerForClassName 'Fetch'
                         @defineAttributes [ { name: 'arr', type: NgParseArray }, 'test' ]
                         
                 RelObject = 
                     class _RelObject extends NgObject
-                        @className = 'Rel'
-                        @defineAttributes [ { name: 'rel', type: NgParseRelation } ]      
+                        @registerForClassName 'Rel'
+                        @defineAttributes [ { name: 'rel', type: NgParseRelation, className: 'Rel' } ]      
                 
                 
                 fetchObj = new FetchObject objectId: 'test_id'

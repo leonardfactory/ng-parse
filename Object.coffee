@@ -86,7 +86,7 @@ angular
                     do (attr) =>
                         attrName    =   if attr.name? then attr.name else attr
                         attrValue   =   if attr.type? and not (attrName in @constructor.reservedAttrNames) and not attributes.hasOwnProperty attrName
-                                            new attr.type
+                                            new attr.type attr # Pass attr for further configuration
                                         else if attributes.hasOwnProperty attrName
                                             attributes[attrName] # todo: use fromParseJSON ?
                                         else
@@ -117,7 +117,7 @@ angular
                             if typeof attr is 'string'
                                 @attributes[attrName] = attributes[attrName] ? null
                             else
-                                @attributes[attrName] = attr.type.fromParseJSON attributes[attrName]
+                                @attributes[attrName] = attr.type.fromParseJSON attributes[attrName], attr # Send parameters defined with @defineAttributes to attr.type Class
                                 @attributes[attrName]._setObject @ if @attributes[attrName]?._setObject?
                                 
             # Elaborate JSON to send to Parse

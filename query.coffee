@@ -185,14 +185,16 @@ angular
                 @
                 
             relatedTo: (key, value) ->
-                [attr, value] = @_getAttr key, value
                 
+                unless typeof key is 'string'
+                    throw new Error 'Key should be a string relative to the parent object'
+                    
                 unless value instanceof NgParseObject
                     throw new Error '`relatedTo` should be called on a a `NgParseObject`'
                     
                 @_constraints.where['$relatedTo'] =
                     object: value._toPointer()
-                    key: attr
+                    key: key
                 @
             
             # Limiting & Skipping

@@ -15,8 +15,8 @@ describe 'NgParse.Relation', ->
             
             TestObject =
                 class TO extends NgParseObject
-                    @className = 'Test'
-                    @defineAttributes [ 'test', { name: 'rel', type: NgParseRelation } ]
+                    @registerForClassName 'Test'
+                    @defineAttributes [ 'test', { name: 'rel', type: NgParseRelation, className: 'Test' } ]
                     
             rel = new NgParseRelation className: 'Test'
                 
@@ -100,3 +100,6 @@ describe 'NgParse.Relation', ->
         obj.__type.should.be.equal 'Pointer'
         obj.objectId.should.be.equal 'test_id'
         obj.className.should.be.equal 'Test'
+            
+    it 'should refer to correct class', ->
+        rel.class.should.be.equal TestObject

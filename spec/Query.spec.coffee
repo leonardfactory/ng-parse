@@ -153,7 +153,7 @@ describe 'NgParse.Query', ->
             
             it 'relatedTo', ->
                 testObj = new TestObject objectId: 'obj_id'
-                getQuery = query.where.attr('rel').relatedTo testObj
+                getQuery = query.where.relatedTo 'rel', testObj
                 getQuery.should.be.equal query
                 
                 query._constraints.where.should.have.property '$relatedTo'

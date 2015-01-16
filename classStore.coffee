@@ -16,7 +16,7 @@ angular
                 klass = @_classes[className]
                 
                 unless klass?
-                    throw new Error "className not registered in the NgParseClassStore. Are you sure you extended NgParseObject and called `@registerForClassName`?"
+                    throw new Error "className '#{className}' not registered in the NgParseClassStore. Are you sure you extended NgParseObject and called `@registerForClassName`?"
                 
                 klass
         

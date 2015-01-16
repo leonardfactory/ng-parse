@@ -27,12 +27,12 @@ describe 'NgParse.Array', ->
         ( -> arr.push 11 ).should.throw Error
     
     it 'should allows initialization with another array', ->
-        arr = new NgParse.Array [1, 2, 3]
+        arr = new NgParse.Array array: [1, 2, 3]
         arr.should.have.length 3
         arr[2].should.be.equal 3
         
     it 'should not edit __parseOps__ when initializing with an array', ->
-        arr = new NgParse.Array [3, 4, 5]
+        arr = new NgParse.Array array: [3, 4, 5]
         arr.__parseOps__.should.be.empty
         
         (-> arr.push 2).should.not.throw

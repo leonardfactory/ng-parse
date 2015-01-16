@@ -1,11 +1,11 @@
 angular
     .module 'ngParse'
-    .factory 'NgParseRelation', (NgParseObject) ->
+    .factory 'NgParseRelation', (NgParseObject, NgParseQuery, ngParseClassStore) ->
         class NgParseRelation
             
             constructor: (options = {}) ->
                 @className = options.className ? ''
-                @class = options.class ? NgParseObject
+                @class = options.class ? (ngParseClassStore.getClass @className) ? NgParseObject
                 @__parseOps__ = [] # Parse Ops support
                 @_parentObject = null
             
@@ -55,6 +55,11 @@ angular
                     '__op': 'RemoveRelation'
                     'objects': obj._toPointer() for obj in objs
             
+            # Get a query for this relationship
+            #
+            query: ->
+                new NgParseQuery 
+            
             # Set parent object in order to retrieve a query for this Relation.
             #
             # This is necessary since Parse Queries require to be built specifying:
@@ -66,11 +71,14 @@ angular
             
             # Derive Relation type (a.k.a. className) from JSON response
             #
-            @fromParseJSON: (obj) ->
+            # @param {Object} obj JSON Object to be parse
+            # @param {Object} definition Attribute definition provided with `@defineAttributes` NgParseObject.
+            #
+            @fromParseJSON: (obj, definition) ->
                 unless obj.__type? and obj.__type is 'Relation'
                     throw new Error "Cannot create a NgParse.Relation for a non-Relation attribute"
                     
-                new @ className: obj.className
+                new @ className: obj.className ? definition.className
             
             toParseJSON: ->
                 if @__parseOps__.length is 0
