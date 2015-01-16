@@ -26,6 +26,9 @@ angular
                 
                 if @method isnt 'POST' and @type is @constructor.Type.Resource and not options.hasOwnProperty 'objectId'
                     throw new Error "Can't fetch a resource without an `objectId` specified in the options"
+                
+                if @method is 'POST' and @type is @constructor.Type.Resource and (not options.data? or options.data.hasOwnProperty 'objectId')
+                    throw new Error "Can't create a new object without passing `data` option, or if data has an `objectId`"
                     
                 if @method isnt 'GET' and @type is @constructor.Type.Query
                     throw new Error "Can't process a query with a method different from GET"
@@ -43,7 +46,7 @@ angular
                         
                 else if @type is @constructor.Type.Other
                     unless options.url?
-                        throw new Error "Can't process a custom request without a specified url"
+                        throw new Error "Can't create a NgParseRequest with type `Other` without specifying `url` in options"
                         
                     @url = options.url
                     

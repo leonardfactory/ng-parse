@@ -2,8 +2,10 @@ describe 'NgParse.User', ->
     
     NgParseUser = null
     NgParseRequest = null
+    ngParseRequestConfig = null
     $httpBackend = null
     $http = null
+    locker = null
     
     beforeEach ->
         angular.mock.module 'ngParse', ($provide) ->
@@ -11,6 +13,16 @@ describe 'NgParse.User', ->
                 appId: 'appId'
                 restApiKey: 'restApiKey'
                 parseUrl: '/'
+            
+            # Simple mock for localStorage
+            $provide.value 'locker',
+                storage: {}
+                driver: -> @
+                namespace: -> @
+                put: (key, val) -> @storage[key] = val
+                get: (key, defaultsTo = null) -> if @storage[key]? then @storage[key] else defaultsTo
+                has: (key) -> @storage[key]?
+                forget: (key) -> @storage[key] = null
             
             # Extremely important in order to avoid bad errors caused by CoffeeScript.
             return
@@ -20,6 +32,13 @@ describe 'NgParse.User', ->
             NgParseRequest  = $injector.get 'NgParseRequest'
             $httpBackend    = $injector.get '$httpBackend'
             $http           = $injector.get '$http'
+            locker          = $injector.get 'locker'
+            
+            ngParseRequestConfig = $injector.get 'ngParseRequestConfig'
+            
+    afterEach ->
+        $httpBackend.verifyNoOutstandingExpectation()
+        $httpBackend.verifyNoOutstandingRequest()
             
     # Attributes
     #
@@ -37,6 +56,8 @@ describe 'NgParse.User', ->
             user.username.should.be.equal 'mario'
             user.password.should.be.equal 'pass'
     
+    # Save
+    #
     describe 'Save', ->
         
         beforeEach ->
@@ -55,3 +76,105 @@ describe 'NgParse.User', ->
             $httpBackend.flush()
             
             user.dirty.should.be.empty
+    
+    # Login
+    #
+    describe 'Login', ->
+        
+        beforeEach ->
+            $httpBackend.expectGET('/login?password=test&username=test').respond 201,
+                sessionToken: 'testToken'
+                objectId: 'user_id'
+                
+            NgParseUser.login 'test', 'test'
+            $httpBackend.flush()
+        
+        it 'should grab sessionToken from a correct request', ->            
+            NgParseUser.current.should.not.be.null
+            NgParseUser.current._sessionToken.should.be.equal 'testToken'
+        
+        it 'should save sessionToken and correct id in localStorage', ->
+            currentUser = locker.get 'currentUser'
+            currentUser.should.have.keys ['sessionToken', 'objectId']
+            
+            currentUser.sessionToken.should.be.equal 'testToken'
+            currentUser.objectId.should.be.equal 'user_id'
+        
+        it 'should save correct `current` static variable', ->
+            NgParseUser.current.should.be.an.instanceof NgParseUser
+            NgParseUser.current.objectId.should.be.equal 'user_id'
+        
+        it 'should set sessionToken inside ngParseRequestConfig', ->
+            ngParseRequestConfig.sessionToken.should.be.equal 'testToken'
+         
+    # Logout
+    #   
+    describe 'Logout', ->
+        
+        beforeEach ->
+            $httpBackend.expectGET('/login?password=test&username=test').respond 201,
+                sessionToken: 'testToken'
+                objectId: 'user_id'
+                
+            NgParseUser.login 'test', 'test'
+            $httpBackend.flush()
+            
+        it 'should remove `current` static variable and updating `logged` static property', ->
+            NgParseUser.logged.should.be.true
+            
+            NgParseUser.logout()
+            should.not.exist NgParseUser.current
+            
+            NgParseUser.logged.should.be.false
+        
+        it 'should remove sessionToken', ->
+            NgParseUser.logout()
+            should.not.exist ngParseRequestConfig.sessionToken
+            
+        it 'should remove current user data from localStorage', ->
+            NgParseUser.logout()
+            currentUser = locker.get 'currentUser'
+            should.not.exist currentUser
+            
+    # Current user general
+    #
+    describe 'Current user', ->
+        
+        beforeEach ->
+            $httpBackend
+                .when 'GET', '/users/me'
+                .respond
+                    objectId: 'user_id'
+        
+        it 'should be set to null if not logged', ->
+            should.equal NgParseUser.current, null
+            
+        it 'should fetch the user from `me` path', ->
+            user = new NgParseUser
+            user._sessionToken = 'testToken'
+            
+            $httpBackend.expectGET '/users/me'
+            user.me()
+            $httpBackend.flush()
+            
+            user.objectId.should.be.equal 'user_id'
+            
+        it 'should load user from localStorage', ->
+            locker.put 'currentUser',
+                sessionToken: 'testToken'
+                objectId: 'user_id'
+            
+            $httpBackend.expectGET '/users/me'
+            NgParseUser.checkIfLogged()
+            $httpBackend.flush()
+            
+            NgParseUser.current.should.not.be.null
+            NgParseUser.current.objectId.should.be.equal 'user_id'
+            NgParseUser.current._sessionToken.should.be.equal 'testToken'
+            NgParseUser.logged.should.be.true
+            
+            ngParseRequestConfig.sessionToken.should.be.equal 'testToken'
+            
+            
+            
+            

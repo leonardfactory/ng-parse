@@ -1,6 +1,6 @@
 angular
     .module 'ngParse'
-    .factory 'NgParseUser', ($q, NgParseObject, NgParseRequest, locker) ->
+    .factory 'NgParseUser', ($q, NgParseObject, NgParseRequest, ngParseRequestConfig, locker) ->
         
         # An NgParseUser is a special NgParseObject which provides special methods
         # to handle User persistance on Parse.com
@@ -22,9 +22,23 @@ angular
             
             # Session token is set only for current user
             #
-            _sessionToken: null
+            __sessionToken__: null
             
+            Object.defineProperty @prototype, '_sessionToken',
+                get: -> @__sessionToken__
+                set: (sessionToken) ->
+                    @__sessionToken__ = sessionToken
+                    ngParseRequestConfig.sessionToken = sessionToken
+            
+            # A shared object containing the currently logged-in NgParseUser.
+            # It is null if no sessionToken has been found.
+            #
             @current = null
+            
+            # Specify if an user is currently logged-in
+            #
+            Object.defineProperty @, 'logged',
+                get: -> @current?
             
             # Login to the server
             #
@@ -60,17 +74,43 @@ angular
                         
                 deferred.promise
                 
+            # Logout
+            #
+            @logout: ->
+                @current._sessionToken = null
+                @current = null
+                @_storageDelete()
+                
+            # Fetch from `me` path
+            #
+            me: ->
+                request = new NgParseRequest
+                                method: 'GET'
+                                url: 'users/me'
+                                type: NgParseRequest.Type.Other
+                
+                deferred = $q.defer()
+                request
+                    .perform()
+                    .success (result) =>
+                        @_updateWithAttributes result
+                        @_sessionToken = result.sessionToken if result.sessionToken?
+                        
+                        deferred.resolve @
+                    .error (error) =>
+                        deferred.reject error
+                
             
             @checkIfLogged: ->
                 if locker.driver('local').namespace('ngParse').has 'currentUser'
                     currentUser = locker.driver('local').namespace('ngParse').get 'currentUser'
-                    @current = new @ objectId: currentUser.objectId
-                    @current._sessionToken = currentUser._sessionToken
+                    @current = new @
+                    @current._sessionToken = currentUser.sessionToken
                     
-                    @current.fetch()
-                        .then ->
-                            console.log 'fetched'
-                    # todo add a promise
+                    @current
+                        .me()
+                        .error (error) =>
+                            @logout() if error.code is 101 # Logout if parse say this session is invalid
                     
                  
             # Save current user into localStorage in order to remember it.
@@ -79,3 +119,8 @@ angular
                 locker.driver('local').namespace('ngParse').put 'currentUser',
                     sessionToken: @current._sessionToken
                     objectId: @current.objectId
+                    
+            # Delete from local storage
+            #
+            @_storageDelete: ->
+                locker.driver('local').namespace('ngParse').forget 'currentUser'

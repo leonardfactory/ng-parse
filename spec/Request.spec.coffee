@@ -1,9 +1,14 @@
 describe 'NgParse.Request', ->
     
     NgParseRequest = null
+    ngParseRequestConfig = null
     resOptions = null
     userOptions = null
     queryOptions = null
+    otherOptions = null
+    
+    $http = null
+    $httpBackend = null
     
     beforeEach ->
         angular.mock.module 'ngParse', ($provide) ->
@@ -16,12 +21,12 @@ describe 'NgParse.Request', ->
             return
             
         
-        inject (ngParseRequestConfig, _NgParseRequest_) ->
+        inject (_NgParseRequest_, $injector) ->
             NgParseRequest = _NgParseRequest_
             
-            # Fake API Keys
-            NgParseRequest.restApiKey = 'restApiKey'
-            NgParseRequest.appId = 'appId'
+            ngParseRequestConfig    = $injector.get 'ngParseRequestConfig'
+            $http                   = $injector.get '$http'
+            $httpBackend            = $injector.get '$httpBackend'
             
             resOptions =
                 method: 'GET'
@@ -39,7 +44,16 @@ describe 'NgParse.Request', ->
                 method: 'GET'
                 type: NgParseRequest.Type.Query
                 className: 'TestClass'
+            
+            otherOptions =
+                method: 'GET'
+                type: NgParseRequest.Type.Other
+                url: 'test'
                    
+    afterEach ->
+        $httpBackend.verifyNoOutstandingExpectation()
+        $httpBackend.verifyNoOutstandingRequest()
+        
     # Initialization
     #
     describe 'Initialization', ->
@@ -75,7 +89,40 @@ describe 'NgParse.Request', ->
             request = new NgParseRequest queryOptions
             request.httpConfig.url.should.be.equal "/classes/TestClass/"
                 
+                
+        it 'should not allow a POST resource request with an objectId', ->
+            wrongOptions = 
+                method: 'POST'
+                type: NgParseRequest.Type.Resource
+                data:
+                    objectId: 'id_old_object'
+            
+            (-> request = new NgParseRequest wrongOptions).should.throw Error
+            
+        it 'should create an Other request', ->
+            (-> request = new NgParseRequest otherOptions).should.not.throw
+            
+        it 'should require an URL for Other request', ->
+            wrongOptions =
+                method: 'GET'
+                type: NgParseRequest.Type.Other
+            
+            (-> request = new NgParseRequest wrongOptions).should.throw "Can't create a NgParseRequest with type `Other` without specifying `url` in options"
+            
+        describe 'Session Token', ->
+            
+            it 'should not set sessionToken if not set in configuration', ->
+                request = new NgParseRequest otherOptions
+                request.httpConfig.headers.should.not.have.property 'X-Parse-Session-Token'
+            
+            it 'should set sessionToken if configured', ->
+                ngParseRequestConfig.sessionToken = 'testSessionToken'
+                request = new NgParseRequest otherOptions
+                request.httpConfig.headers.should.have.property 'X-Parse-Session-Token'
+                request.httpConfig.headers['X-Parse-Session-Token'].should.be.equal 'testSessionToken'
+                
     # Create accessor
+    #
     describe 'Create', ->
         
         it 'should create an NgParseRequest using create static method', ->
@@ -83,3 +130,32 @@ describe 'NgParse.Request', ->
             request.should.be.an.instanceof NgParseRequest
             
             request.should.have.ownProperty 'httpConfig'
+            
+    # Perform
+    #
+    describe 'Perform', ->
+        
+        it 'should return a success if proper request', ->
+            request = new NgParseRequest otherOptions
+            response = null
+            
+            $httpBackend.expectGET('/test').respond 201, 'success'
+            request
+                .perform()
+                .success (result) -> response = result
+            $httpBackend.flush()
+            
+            response.should.be.equal 'success'
+            
+        it 'should return an error if request failed', ->
+            request = new NgParseRequest otherOptions
+            response = null
+            
+            $httpBackend.expectGET('/test').respond 404, 'notfound'
+            request
+                .perform()
+                .error (error) -> response = error
+            $httpBackend.flush()
+            
+            response.should.be.equal 'notfound'
+             
