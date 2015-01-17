@@ -27,5 +27,11 @@ angular
                 classModels[anotherModel.id] = anotherModel
                 
                 found # Tell the caller if we have inserted it or replaced an existing one
+                
+            # Remove a model
+            #
+            removeModel: (className, id) ->
+                if @_models[className]? and @_models[className][id]?
+                    @_models[className][id] = null
             
         new NgParseStore()
