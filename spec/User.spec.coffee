@@ -48,7 +48,7 @@ describe 'NgParse.User', ->
             NgParseUser.totalAttrNames.should.contain 'objectId'
             
         it 'should have custom attributes', ->
-            NgParseUser.totalAttrNames.should.have.length 6
+            NgParseUser.totalAttrNames.should.have.length 7
             NgParseUser.totalAttrNames.should.contain.members ['username', 'email', 'password']
             
         it 'instances should have attributes set', ->

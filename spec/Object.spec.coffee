@@ -6,6 +6,7 @@ describe 'NgParse.Object', ->
     NgParseArray = null
     NgParseDate = null
     NgParseRelation = null
+    NgParseACL = null
     ngParseStore = null
     TestObject = null
     FailObject = null
@@ -30,6 +31,7 @@ describe 'NgParse.Object', ->
             NgParseDate = _NgParseDate_
             NgParseRelation = $injector.get 'NgParseRelation'
             ngParseStore = $injector.get 'ngParseStore'
+            NgParseACL = $injector.get 'NgParseACL'
             
             $httpBackend    = $injector.get '$httpBackend'
             $http           = $injector.get '$http'
@@ -56,6 +58,7 @@ describe 'NgParse.Object', ->
             attrNames.should.contain 'createdAt'
             attrNames.should.contain 'updatedAt'
             attrNames.should.contain 'objectId'
+            attrNames.should.contain 'ACL'
         
         it 'instances should have standard attributes set to undefined', ->
             testObj.should.not.have.property 'objectId'
@@ -91,7 +94,7 @@ describe 'NgParse.Object', ->
             attrOk = attr for attr in FailObject.totalAttrNames when attr.name is 'arr'
             attrOk.name.should.be.equal 'arr'
             
-            FailObject.totalAttrNames.should.have.length 4
+            FailObject.totalAttrNames.should.have.length 5
             FailObject.totalAttrNames.should.not.contain 'testAttr'
         
             failObj = new FailObject
@@ -180,6 +183,12 @@ describe 'NgParse.Object', ->
                         objectId: 'test_id'
                         arr: [ 'arr1', 'arr2' ]
                         createdAt: date.format()
+                        ACL:
+                            'user':
+                                read: true
+                                write: true
+                            '*':
+                                read: true
                         
                 $httpBackend
                     .when 'GET', "/classes/Rel/test_id"
@@ -254,6 +263,18 @@ describe 'NgParse.Object', ->
                 $httpBackend.flush()
                 
                 fetchObj.dirty.should.be.empty
+                
+            it 'should set ACL after a fetch', ->
+                fetchObj.ACL.should.be.an.instanceof NgParseACL
+                
+                $httpBackend.expectGET "/classes/Fetch/test_id"
+                fetchObj.fetch()
+                $httpBackend.flush()
+                
+                fetchObj.ACL.should.be.an.instanceof NgParseACL
+                fetchObj.ACL.__parseOps__.should.have.length 0
+                fetchObj.ACL.permissions.should.have.keys ['*', 'user']
+                fetchObj.ACL.permissions['*'].should.be.deep.equal { read: true }
     
         # Save
         #

@@ -1,6 +1,6 @@
 angular
     .module 'ngParse'
-    .factory 'NgParseObject', ($q, ngParseStore, ngParseClassStore, NgParseRequest, NgParseDate) ->
+    .factory 'NgParseObject', ($q, ngParseStore, ngParseClassStore, NgParseRequest, NgParseDate, NgParseACL) ->
         # An NgParseObject is an utility class for all objects backed up by Parse.
         #
         # It's necessary to extend `NgParseObject` with custom attributes for each
@@ -17,7 +17,10 @@ angular
                 , 
                     name: 'updatedAt'
                     type: NgParseDate 
-                , 
+                ,
+                    name: 'ACL'
+                    type: NgParseACL
+                ,
                     'objectId'
             ]
             
@@ -132,8 +135,9 @@ angular
             #
             # @return {Object} JSON converted object for parse
             #
-            _toParseJSON: ->
+            _toParseJSON: (plain = false) ->
                 obj = {}
+                jsonMethod = if plain then 'toPlainJSON' else 'toParseJSON'
                 
                 for attr in @constructor.totalAttrNames
                     do (attr) =>
@@ -147,7 +151,7 @@ angular
                             if typeof attr is 'string'
                                 val = @attributes[attrName] ? null
                             else
-                                val = if @attributes[attrName]? then @attributes[attrName].toParseJSON() else null
+                                val = if @attributes[attrName]? then @attributes[attrName][jsonMethod]() else null
                             
                             # send only fields with a value
                             obj[attrName] = val if val?
@@ -158,23 +162,7 @@ angular
             # Needed when performing requests via NgParseCloud
             #
             _toPlainJSON: ->
-                obj = {}
-                
-                for attr in @constructor.totalAttrNames
-                    do (attr) =>
-                        attrName = attr.name ? attr
-                        
-                        isDirty = attrName in @dirty or (attr.type? and @attributes[attrName]? and @attributes[attrName].__parseOps__.length > 0)
-                        
-                        unless attrName in @constructor.reservedAttrNames or not isDirty
-                            if typeof attr is 'string'
-                                val = @attributes[attrName] ? null
-                            else
-                                val = if @attributes[attrName]? then @attributes[attrName].toPlainJSON() else null
-                            
-                            obj[attrName] = val if val?
-                            
-                obj
+                @_toParseJSON yes
                 
             # Convert the object in a reference (`Pointer`)
             #
