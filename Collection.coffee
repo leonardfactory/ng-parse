@@ -24,8 +24,8 @@ angular
                 unless obj instanceof @class
                     throw new Error "Can't add a non NgParseObject to a Collection."
                 
-                for model in @models when model.id is obj.model.id
-                    throw new Error "Object with id #{obj.model.id} is already contained in this Collection"    
+                for model in @models when model.id is obj.id
+                    throw new Error "Object with id #{obj.id} is already contained in this Collection"    
                 
                 @models.push obj
             
