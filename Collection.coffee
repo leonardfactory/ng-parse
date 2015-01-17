@@ -1,12 +1,18 @@
 angular
     .module 'ngParse'
-    .factory 'NgParseCollection', ($q, NgParseObject, NgParseQuery) ->
+    .factory 'NgParseCollection', ($q, NgParseObject, NgParseQuery, ngParseCollectionStore) ->
         class NgParseCollection
+            
+            @collectionName = ''
             
             constructor: (options = {}) ->
                 @class  = options.class ? NgParseObject
                 @query  = options.query ? new NgParseQuery class: @class
                 @models = []
+                @_lastUpdate = null
+                
+                # Register collection for future use
+                ngParseCollectionStore.put @constructor.hash(options), @ if @constructor.hash(options) isnt null
             
             add: (obj) ->
                 unless obj instanceof @class
@@ -34,9 +40,55 @@ angular
                 unless @query instanceof NgParseQuery
                     throw new Error "Can't fetch Collection without using a `NgParseQuery` object"
                 
+                @_rollbackLastUpdate = @_lastUpdate
+                @_lastUpdate = new Date()
+                
+                deferred = $q.defer()
+                
                 @query
                     .find()
                     .then (results) =>
                         @models = []
                         @models.push result for result in results
-                        results
+                        deferred.resolve results
+                    .catch (error) =>
+                        @_lastUpdate = @_rollbackLastUpdate
+                        deferred.reject error
+                
+                deferred.promise
+                        
+            # Fetch only if this collection has not been fetched recently
+            #
+            update: ->
+                now     = new Date()
+                
+                # If @_lastUpdate is null surely we have to fetch this collection.
+                unless @_lastUpdate?
+                    @fetch()
+                else
+                    # Calculate minutes passed since last update
+                    diff_min = Math.round( (now.getTime() - @_lastUpdate.getTime()) / 1000 / 60)
+                    if diff_min > 1
+                        @fetch()
+                    else
+                        $q.when @models
+                
+                
+                        
+            # A custom hash function is used in order to store the collection 
+            # in `ngParseCollectionStore`, in order to reuse the same across
+            # the application.
+            # 
+            # The collection instances could be accessed via @get
+            #
+            @hash: (options = {}) ->
+                null
+                
+            @get: (options) ->
+                hash = @hash options
+                if ngParseCollectionStore.has hash
+                    ngParseCollectionStore.get hash
+                else
+                    collection = new @ options
+                    collection
+                
