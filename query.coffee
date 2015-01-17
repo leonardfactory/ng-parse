@@ -43,10 +43,40 @@ angular
                         deferred.reject error
                         
                 deferred.promise
+                
+            # Execute this query with a `first` search.
+            #
+            first: ->
+                request = new NgParseRequest
+                                method: 'GET'
+                                type: NgParseRequest.Type.Query
+                                params: @_toParams(yes)
+                                className: @class.className
+                
+                deferred = $q.defer()
+                request
+                    .perform()
+                    .success (results) =>
+                        if results.results.length is 0
+                            deferred.resolve null
+                        else
+                            # Parse only first result
+                            result = results.results[0]
+                            object = @class.get id: result.objectId
+                            object._updateWithAttributes result
+                            deferred.resolve object
+                    .error (error) =>
+                        deferred.reject error
+                        
+                deferred.promise
+                        
             
             # Calculate params from internal queries options
             #
-            _toParams: ->
+            # @param {Boolean} first If set to `yes`, the query will return only 
+            #    the first result using `limit=1` parameter
+            #
+            _toParams: (first = no) ->
                 params = null
                 
                 if _.size(@_constraints) > 0
@@ -66,6 +96,10 @@ angular
                             
                         params.where = 
                             $or: @_orWhereConstraints
+                            
+                if first
+                    params = params ? {}
+                    params.limit = 1
 
                 params
                     
@@ -90,15 +124,16 @@ angular
                     
                 # Create an $or query.
                 #
-                or: ->
-                    @_orWhereConstraints = @_orWhereConstraints ? [] # Store where constraints as an array
-                    @_orWhereConstraints.push _.clone(@_constraints.where)
+                or: 
+                    get: ->
+                        @_orWhereConstraints = @_orWhereConstraints ? [] # Store where constraints as an array
+                        @_orWhereConstraints.push _.clone(@_constraints.where)
                     
-                    # Reset
-                    @_constraints.where = {} 
-                    @_currentAttr = null
+                        # Reset
+                        @_constraints.where = {} 
+                        @_currentAttr = null
                     
-                    @
+                        @
             
             # Sets current attribute so that chained comparator can operate on it.
             # 

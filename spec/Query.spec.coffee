@@ -72,6 +72,14 @@ describe 'NgParse.Query', ->
             getQuery = query.where.equal 'test', 'testTest'
             query._constraints.where.test.should.be.equal 'testTest'
             getQuery.should.be.equal query
+        
+        it 'chaining should set constraints correctly', ->
+            query.where
+                .attr('attr1').lessThan 10 
+                .and.attr('attr2').containedIn [1, 2, 3]
+                .and.attr('attr3').exist()
+                
+            query._constraints.where.should.have.keys ['attr1', 'attr2', 'attr3']
             
         # All Comparators should return the query 
         #
@@ -179,5 +187,32 @@ describe 'NgParse.Query', ->
                 getQuery = query.order '-createdAt'
                 query._constraints.order.should.be.equal '-createdAt'
                 getQuery.should.be.equal query
+        
+        # Or query
+        
+        describe 'Or query', ->
+            
+            it 'should set constraints array', ->
+                query
+                    .where.attr('attr').equal(3).and.attr('attr2').lessThan(5)
+                    .or.attr('attr').equal(4)
+                    
+                query._orWhereConstraints.should.be.an.instanceof Array
+                
+                params = query._toParams()
+                
+                params.where.should.have.keys ['$or']
+                params.where.$or.should.be.an.instanceof Array
+                params.where.$or.should.be.deep.equal [{ attr: 3, attr2: { $lt: 5 } }, { attr: 4}]
+                
+            it 'should leave constraints different from `where` untouched', ->
+                query
+                    .where.attr('attr').equal(3)
+                    .or.attr('attr').equal(4)
+                    .limit 100
+                    .order 'createdAt'
+                    
+                query._constraints.limit.should.be.equal 100
+                query._constraints.order.should.be.equal 'createdAt'
                 
         
