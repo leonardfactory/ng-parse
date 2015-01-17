@@ -99,6 +99,8 @@ angular
                     .error (error) =>
                         deferred.reject error
                 
+                deferred.promise
+                
             
             @checkIfLogged: ->
                 if locker.driver('local').namespace('ngParse').has 'currentUser'
@@ -107,12 +109,14 @@ angular
                     # Get class which registered for '_User'
                     userClass = ngParseClassStore.getClass '_User'
                     
-                    @current = new userClass
-                    @current._sessionToken = currentUser.sessionToken
+                    current = userClass.get id: currentUser.objectId
+                    current._sessionToken = currentUser.sessionToken
                     
-                    @current
+                    userClass.current = current
+                    
+                    userClass.current
                         .me()
-                        .error (error) =>
+                        .catch (error) =>
                             @logout() if error.code is 101 # Logout if parse say this session is invalid
                     
                  
