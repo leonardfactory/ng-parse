@@ -8,10 +8,11 @@ angular
             #
             @parse: (result) ->
                 # Parse an object.
-                if result.className? and result.objectId?
-                    objClass = ngParseClassStore.getClass result.className
-                    obj = objClass.get objectId: result.objectId
-                    obj._updateWithAttributes result
+                if result.result?.className? and result.result?.objectId?
+                    objClass = ngParseClassStore.getClass result.result.className
+                    obj = objClass.get objectId: result.result.objectId
+                    obj._updateWithAttributes result.result
+                    obj._resetOps()
                     obj
                 
                 # Simple JSON. leave it as-is
@@ -39,7 +40,7 @@ angular
                 
                 onSuccess = (result) =>
                     if saveObject
-                        data._updateWithAttributes result
+                        data._updateWithAttributes result.result
                         deferred.resolve data
                     else
                         obj = @parse result

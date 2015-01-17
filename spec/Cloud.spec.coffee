@@ -33,16 +33,18 @@ describe 'NgParse.Cloud', ->
             $httpBackend
                 .when 'POST', '/functions/obj'
                 .respond
-                    className: 'Test'
-                    objectId: 'test_id'
-                    attr: 'attrValue'
+                    result:
+                        className: 'Test'
+                        objectId: 'test_id'
+                        attr: 'attrValue'
                     
             $httpBackend
                 .when 'POST', '/functions/save'
                 .respond
-                    className: 'Test'
-                    objectId: 'save_id'
-                    attr: 'savedAttr'
+                    result:
+                        className: 'Test'
+                        objectId: 'save_id'
+                        attr: 'savedAttr'
                     
     afterEach ->
         $httpBackend.verifyNoOutstandingExpectation()
@@ -110,7 +112,9 @@ describe 'NgParse.Cloud', ->
         $httpBackend.expectPOST '/functions/save'
         NgParseCloud
             .run 'save', newObj, yes
-            .then (result) => resObj = result
+            .then (result) =>
+                console.log result
+                resObj = result
         $httpBackend.flush()
         
         newObj.should.be.equal resObj
