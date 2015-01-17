@@ -59,7 +59,6 @@ describe 'NgParse.Collection', ->
         
     it 'should retrieve stored collection from ngParseCollectionStore using `@get`', ->
         hashColl    = new TestHashCollection id: 'hash'
-        console.log ngParseCollectionStore._collections
         ngParseCollectionStore.has('TestHashCollection:hash').should.be.true
         
         getColl     = TestHashCollection.get id: 'hash'

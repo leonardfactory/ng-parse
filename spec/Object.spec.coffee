@@ -6,6 +6,7 @@ describe 'NgParse.Object', ->
     NgParseArray = null
     NgParseDate = null
     NgParseRelation = null
+    ngParseStore = null
     TestObject = null
     FailObject = null
     testObj = null
@@ -28,6 +29,7 @@ describe 'NgParse.Object', ->
             NgParseArray = _NgParseArray_
             NgParseDate = _NgParseDate_
             NgParseRelation = $injector.get 'NgParseRelation'
+            ngParseStore = $injector.get 'ngParseStore'
             
             $httpBackend    = $injector.get '$httpBackend'
             $http           = $injector.get '$http'
@@ -259,6 +261,7 @@ describe 'NgParse.Object', ->
             
             it 'should save an object without an objectId creating a post request', ->
                 newObj = new FetchObject
+                newObj.className.should.be.equal 'Fetch'
                 newObj.arr.push 'element'
                 newObj.arr.should.have.length 1
                 newObj.arr.__parseOps__.should.have.length 1
@@ -274,6 +277,16 @@ describe 'NgParse.Object', ->
                 newObj.arr.should.have.length 1
                 newObj.arr.should.have.members ['element']
                 newObj.arr.__parseOps__.should.have.length 0
+                
+            it 'should save an object and put it inside ngParseStore', ->
+                newObj = new FetchObject
+                newObj.arr.push 'element'
+                
+                $httpBackend.expectPOST "/classes/Fetch/"
+                newObj.save()
+                $httpBackend.flush()
+                
+                ngParseStore._models['Fetch'].should.contain.keys ['new_id']
             
             it 'should update an object if it has an objectId with a put request', ->
                 updateObj = new FetchObject objectId: 'new_id'

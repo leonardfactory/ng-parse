@@ -24,6 +24,8 @@ angular
                 @method = options.method ? 'GET'
                 @type   = options.type
                 
+                # Check if set method is usable with desired `type` action.
+                #
                 if @method isnt 'POST' and @type is @constructor.Type.Resource and not options.hasOwnProperty 'objectId'
                     throw new Error "Can't fetch a resource without an `objectId` specified in the options"
                 
@@ -33,6 +35,11 @@ angular
                 if @method isnt 'GET' and @type is @constructor.Type.Query
                     throw new Error "Can't process a query with a method different from GET"
                 
+                if @method isnt 'POST' and @type is @constructor.Type.Cloud
+                    throw new Error "Can't run a Cloud Code function with a method different from POST"
+                
+                # Resources and Queries
+                #
                 if @type is @constructor.Type.Resource or @type is @constructor.Type.Query
                     
                     unless options.className?
@@ -47,8 +54,20 @@ angular
                     # Add `id` if getting a resource
                     if options.method isnt 'POST' and @type is @constructor.Type.Resource
                         @url = "#{@url}#{options.objectId}"
-                        
+                
+                # Cloud code
+                #
+                else if @type is @constructor.Type.Cloud
+                    
+                    unless options.functionName?
+                        throw new Error "Can't create a NgParseRequest for a CloudCode functon without specifying a `functionName`"
+                    
+                    @url = "functions/#{options.functionName}"        
+                
+                # General requests
+                #
                 else if @type is @constructor.Type.Other
+                    
                     unless options.url?
                         throw new Error "Can't create a NgParseRequest with type `Other` without specifying `url` in options"
                         

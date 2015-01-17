@@ -109,6 +109,9 @@ angular
             # @param {Object} attributes key-value set of attributes
             #
             _updateWithAttributes: (attributes = {}) ->
+                
+                isNew = @isNew
+                
                 for attr in @constructor.totalAttrNames
                     do (attr) =>
                         attrName = attr.name ? attr
@@ -120,6 +123,10 @@ angular
                             else
                                 @attributes[attrName] = attr.type.fromParseJSON attributes[attrName], attr # Send parameters defined with @defineAttributes to attr.type Class
                                 @attributes[attrName]._setObject @ if @attributes[attrName]?._setObject?
+                                
+                # Now is saved! Add inside ngParseStore
+                if not @isNew and isNew
+                    ngParseStore.updateModel this
                                 
             # Elaborate JSON to send to Parse
             #
@@ -145,6 +152,28 @@ angular
                             # send only fields with a value
                             obj[attrName] = val if val?
                     
+                obj
+                
+            # Elaborate a plain JSON Object to send to Parse.
+            # Needed when performing requests via NgParseCloud
+            #
+            _toPlainJSON: ->
+                obj = {}
+                
+                for attr in @constructor.totalAttrNames
+                    do (attr) =>
+                        attrName = attr.name ? attr
+                        
+                        isDirty = attrName in @dirty or (attr.type? and @attributes[attrName]? and @attributes[attrName].__parseOps__.length > 0)
+                        
+                        unless attrName in @constructor.reservedAttrNames or not isDirty
+                            if typeof attr is 'string'
+                                val = @attributes[attrName] ? null
+                            else
+                                val = if @attributes[attrName]? then @attributes[attrName].toPlainJSON() else null
+                            
+                            obj[attrName] = val if val?
+                            
                 obj
                 
             # Convert the object in a reference (`Pointer`)

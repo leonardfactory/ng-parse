@@ -97,6 +97,9 @@ angular
                     null
                 else
                     @__parseOps__[0]
+                    
+            toPlainJSON: ->
+                throw new Error "NgParse.Relation actually can't be sent in a PlainObject format"
             
             # Triggered after a save.
             _resetParseOps: ->

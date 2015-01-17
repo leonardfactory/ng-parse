@@ -33,6 +33,11 @@ angular
                     null
                 else
                     @__parseOps__[0]
+                    
+            toPlainJSON: ->
+                arr = []
+                arr.push element for element in this
+                arr
             
             # Data received from parse is a simple javascript array.
             #       

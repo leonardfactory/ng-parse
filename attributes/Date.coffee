@@ -20,6 +20,9 @@ angular
                 __type: "Date"
                 iso: @moment.format()
                 
+            toPlainJSON: ->
+                @toParseJSON()
+                
             # Transform a server attribute into an usable NgParseDate instance.
             # Since `createdAt` are sent in a different way from other `Date`
             # attributes, we must check this incoherence.
