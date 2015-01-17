@@ -8,6 +8,8 @@ angular
                     @moment = moment options.iso, moment.ISO_8601
                 else if options.date
                     @moment = moment options.date
+                else if options.moment
+                    @moment = options.moment
                 else
                     @moment = moment()
                     
