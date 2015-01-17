@@ -163,7 +163,7 @@ describe 'NgParse.Object', ->
                 FetchObject =
                     class _FetchObject extends NgObject
                         @registerForClassName 'Fetch'
-                        @defineAttributes [ { name: 'arr', type: NgParseArray }, 'test' ]
+                        @defineAttributes [ { name: 'arr', type: NgParseArray }, 'test', 'num' ]
                         
                 RelObject = 
                     class _RelObject extends NgObject
@@ -183,6 +183,7 @@ describe 'NgParse.Object', ->
                         objectId: 'test_id'
                         arr: [ 'arr1', 'arr2' ]
                         createdAt: date.format()
+                        num: 0
                         ACL:
                             'user':
                                 read: true
@@ -209,6 +210,11 @@ describe 'NgParse.Object', ->
                     .respond
                         objectId: 'new_id'
                         createdAt: date.format()
+                        
+                $httpBackend
+                    .when 'DELETE', "/classes/Fetch/test_id"
+                    .respond
+                        done: true
                         
         afterEach ->
             $httpBackend.verifyNoOutstandingExpectation()
@@ -368,6 +374,19 @@ describe 'NgParse.Object', ->
                 updateObj.dirty.should.have.members ['test']
                 json = updateObj._toParseJSON()
                 json.should.have.keys ['test']
+                
+            it 'should have dirty fields when using postincrement or preincrement', ->
+                updateObj = new FetchObject objectId: 'test_id'
+                
+                $httpBackend.expectGET "/classes/Fetch/test_id"
+                updateObj.fetch()
+                $httpBackend.flush()    
+                    
+                updateObj.num.should.be.equal 0
+                updateObj.dirty.should.be.empty
+                
+                updateObj.num++;
+                updateObj.dirty.should.have.members ['num']
             
             it 'should have no dirty fields after a save for simple attr', ->
                 updateObj = new FetchObject objectId: 'new_id'
@@ -380,8 +399,23 @@ describe 'NgParse.Object', ->
                 updateObj.dirty.should.be.empty
                 json = updateObj._toParseJSON()
                 json.should.not.have.keys ['test']
+           
+        # Delete
+        # 
+        describe 'Delete', ->
             
+            it 'should perform delete request', ->
+                $httpBackend.expectDELETE "/classes/Fetch/test_id"
+                fetchObj.delete()
+                $httpBackend.flush()
                 
+            it 'should remove object from ngParseStore', ->
+                should.exist ngParseStore.hasModel('Fetch', 'test_id')
+                
+                fetchObj.delete()
+                $httpBackend.flush()
+            
+                should.not.exist ngParseStore.hasModel('Fetch', 'test_id')                
         
     
     

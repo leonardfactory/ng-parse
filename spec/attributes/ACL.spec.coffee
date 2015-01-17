@@ -21,7 +21,6 @@ describe 'NgParse.ACL', ->
             aclData =
                 'user_id':
                     read: true
-                    write: false
                 '*':
                     read: true
             
@@ -38,7 +37,7 @@ describe 'NgParse.ACL', ->
         testAcl.user('test').read(true).write(false)
         testAcl.permissions.should.have.keys ['test']
         
-        testAcl.permissions['test'].write.should.be.false
+        testAcl.permissions['test'].should.not.have.property 'write'
         testAcl.permissions['test'].read.should.be.true
         
     it 'should set ACL for user using an object with objectId property', ->
@@ -65,14 +64,14 @@ describe 'NgParse.ACL', ->
     it 'should set ACL using `allow`', ->
         testAcl.user('test').allow(yes, no)
         testAcl.permissions.should.have.keys ['test']
-        testAcl.permissions['test'].should.be.deep.equal { read: yes, write: no }
+        testAcl.permissions['test'].should.be.deep.equal { read: yes }
         
     it 'should serialize correctly', ->
         testAcl
             .user('user_id').allow(yes, no)
             .public.read(yes)
             
-        json = testAcl._toParseJSON()
+        json = testAcl.toParseJSON()
         json.should.be.deep.equal aclData
         
     it 'should set __parseOps__', ->

@@ -247,6 +247,29 @@ angular
                         
                 deferred.promise
             
+            # Delete an object from Parse.com
+            #
+            delete: ->
+                if @isNew
+                    throw new Error "Can't delete an object that has not been saved. Class: #{@className}"
+                
+                request = new NgParseRequest
+                                objectId: @objectId
+                                className: @className
+                                method: 'DELETE'
+                                type: NgParseRequest.Type.Resource
+                
+                deferred = $q.defer()
+                request
+                    .perform()
+                    .success (result) =>
+                        ngParseStore.removeModel @className, @objectId
+                        deferred.resolve @
+                    .error (error) =>
+                        deferred.reject @
+                        
+                deferred.promise
+            
             
             # Gets an instance of this `NgParseObject` using the **factory** pattern.
             #
