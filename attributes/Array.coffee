@@ -14,17 +14,31 @@ angular
             op: (type, objects) ->
                 objs = if objects instanceof Array then objects else [objects]
                 
-                # Currently not supported
+                # Multiple ops of same type are supported
                 if @__parseOps__.length isnt 0
-                    throw new Error "NgParse Actually doesn't support multiple ops without a save() call between"
+                    if @__parseOps__[0].__op isnt type
+                        throw new Error "NgParse Actually doesn't support multiple ops with a different type"
+                    
+                    # Push the new objects inside array
+                    @__parseOps__[0].objects.push.apply @__parseOps__[0].objects, objs
                 
-                @__parseOps__.push
-                    '__op':     type, 
-                    'objects':  objs
+                # Create the op if it is not present
+                else
+                    @__parseOps__.push
+                        '__op':     type, 
+                        'objects':  objs
             
             push: ->
                 @op 'Add', Array.prototype.slice.call arguments # Convert from arguments to array
                 Array.prototype.push.apply this, arguments
+                
+            pushAll: (elements) ->
+                @op 'Add', elements
+                Array.prototype.push.apply this, elements
+            
+            remove: (obj) ->
+                @op 'Remove', Array.prototype.slice.call arguments
+                this.splice this.indexOf(obj), 1
                 
             # Required for Parse serialization
             #
