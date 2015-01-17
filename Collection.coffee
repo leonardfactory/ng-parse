@@ -15,6 +15,11 @@ angular
                 hash = @constructor.hash(options)
                 ngParseCollectionStore.put hash, @ if hash?
             
+            # Adds an object inside this collection, only if its class
+            # is the same as specified in `options.class`
+            #
+            # @param {NgParse.Object} obj Model that will be inserted in the `@models` Array
+            #
             add: (obj) ->
                 unless obj instanceof @class
                     throw new Error "Can't add a non NgParseObject to a Collection."
@@ -24,6 +29,11 @@ angular
                 
                 @models.push obj
             
+            # Remove an object from this collection, passing either
+            # its objectId or the object reference.
+            #
+            # @param {NgParse.Object | String} obj Either a string with the Parse.com row objectId, or a ref to NgParse.Object
+            #
             remove: (obj) ->
                 unless obj instanceof @class or typeof obj is 'string'
                     throw new Error "Can't remove a non NgParseObject from a Collection."
@@ -34,6 +44,8 @@ angular
                     for model, index in @models when model.id is obj
                         @models.splice index, 1 
                     
+            # Download models from Parse using the query specified during initialization.
+            #
             fetch: ->
                 if not @query?
                     throw new Error "Can't fetch Collection without a query"
