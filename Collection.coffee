@@ -14,6 +14,14 @@ angular
                 # Register collection for future use
                 hash = @constructor.hash(options)
                 ngParseCollectionStore.put hash, @ if hash?
+                
+            # Check if a model is contained inside the collection
+            #
+            contains: (obj) ->
+                unless obj instanceof @class
+                    throw new Error "Can't add a non NgParseObject to a Collection."
+                
+                _.some @models, (model) -> model.id is obj.id
             
             # Adds an object inside this collection, only if its class
             # is the same as specified in `options.class`
@@ -23,6 +31,9 @@ angular
             add: (obj) ->
                 unless obj instanceof @class
                     throw new Error "Can't add a non NgParseObject to a Collection."
+                    
+                if obj.isNew
+                    throw new Error "Can't add a NgParseObject that is not saved to Collection"
                 
                 for model in @models when model.id is obj.id
                     throw new Error "Object with id #{obj.id} is already contained in this Collection"    

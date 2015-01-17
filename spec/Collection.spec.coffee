@@ -63,6 +63,25 @@ describe 'NgParse.Collection', ->
         
         getColl     = TestHashCollection.get id: 'hash'
         getColl.should.be.equal hashColl
+        
+    it 'should add element in the collection', ->
+        testObj = new TestObject objectId: 'id'
+        testColl.add testObj
+        testColl.models.should.have.length 1
+        testColl.models[0].should.be.equal testObj
+    
+    it 'should return true if object is contained', ->
+        testObj = new TestObject objectId: 'id'
+        testColl.add testObj
+        testColl.contains(testObj).should.be.true
+        
+    it 'should not add an element that is not saved', ->
+        testObj = new TestObject
+        (-> testColl.add testObj).should.throw Error
+        
+    it 'should return false if element is not contained', ->
+        testObj = new TestObject objectId: 'id'
+        testColl.contains(testObj).should.be.false
     
     # Fetch and Update
     #
