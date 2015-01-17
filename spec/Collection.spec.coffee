@@ -1,21 +1,72 @@
 describe 'NgParse.Collection', ->
     
-    NgCollection = null
-    NgObject = null
+    NgParseCollection   = null
+    NgParseObject       = null
+    TestObject = null
+    testObj = null
+    TestCollection = null
+    testColl = null
+    baseTime = null
     
     beforeEach ->
         angular.mock.module 'ngParse'
-        inject (NgParseCollection, NgParseObject) -> 
-            NgCollection = NgParseCollection
-            NgObject = NgParseObject
+        
+        inject ($injector) -> 
+            NgParseCollection   = $injector.get 'NgParseCollection'
+            NgParseObject       = $injector.get 'NgParseObject'
+            
+            TestObject =
+                class _TestObject extends NgParseObject
+                    @registerForClassName 'Test'
+            
+            TestCollection =
+                class _TestCollection extends NgParseCollection
+                    @collectionName = 'TestCollection'
+                
+                    constructor: ->
+                        super class: TestObject
+                            
+            testColl = new TestCollection
+            
+            baseTime = new Date 2013, 12, 25
     
     it 'should have correct class set', ->
-        class TestObject extends NgObject
-            @class = Parse.Object
-            @className = 'Test'
+        testColl.class.should.be.equal TestObject
+    
+    # Fetch and Update
+    #
+    describe 'Collection fetch', ->
         
-        collection = new NgCollection class: TestObject
+        beforeEach -> 
+            jasmine.clock().install()
+        
+        afterEach ->
+            jasmine.clock().uninstall()
+        
+        it 'should call fetch if not updated', ->
+            spyOn(testColl, 'fetch').and.returnValue null
+            testColl.update()
+            expect(testColl.fetch).toHaveBeenCalled()
+        
+        it 'should not call fetch if update recently', ->
             
-        expect(collection.class).toBe TestObject
-        expect(collection.class.className).toBe 'Test'
+            jasmine.clock().mockDate(baseTime)
+            testColl._lastUpdate = baseTime
+            
+            spyOn(testColl, 'fetch').and.returnValue null
+            testColl.update()
+            expect(testColl.fetch).not.toHaveBeenCalled()
+            
+        it 'should update calling fetch if data is outdated', ->
+            
+            jasmine.clock().mockDate(baseTime)
+            testColl._lastUpdate = baseTime
+            
+            jasmine.clock().tick(1000 * 60 * 60) # After one hour should be enough!
+            spyOn(testColl, 'fetch').and.returnValue null
+            testColl.update()
+            expect(testColl.fetch).toHaveBeenCalled()
+        
+            
+        
     
