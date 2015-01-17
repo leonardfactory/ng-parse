@@ -1,10 +1,12 @@
 describe 'NgParse.Collection', ->
     
     NgParseCollection   = null
+    ngParseCollectionStore = null
     NgParseObject       = null
     TestObject = null
     testObj = null
     TestCollection = null
+    TestHashCollection = null
     testColl = null
     baseTime = null
     
@@ -15,6 +17,8 @@ describe 'NgParse.Collection', ->
             NgParseCollection   = $injector.get 'NgParseCollection'
             NgParseObject       = $injector.get 'NgParseObject'
             
+            ngParseCollectionStore = $injector.get 'ngParseCollectionStore'
+            
             TestObject =
                 class _TestObject extends NgParseObject
                     @registerForClassName 'Test'
@@ -23,8 +27,18 @@ describe 'NgParse.Collection', ->
                 class _TestCollection extends NgParseCollection
                     @collectionName = 'TestCollection'
                 
-                    constructor: ->
-                        super class: TestObject
+                    constructor: -> super class: TestObject
+                            
+            TestHashCollection =
+                class _TestHashCollection extends NgParseCollection
+                    @collectionName = 'TestHashCollection'
+                    
+                    @hash: (options = {}) ->
+                        @collectionName + ':' + options.id
+                        
+                    constructor: (options = {}) -> 
+                        options.class = TestObject
+                        super options
                             
             testColl = new TestCollection
             
@@ -32,6 +46,24 @@ describe 'NgParse.Collection', ->
     
     it 'should have correct class set', ->
         testColl.class.should.be.equal TestObject
+    
+    it 'should not be stored inside ngParseCollectionStore if no `hash` function is provided', ->
+        spyOn(ngParseCollectionStore, 'put').and.returnValue null
+        coll = new TestCollection
+        expect(ngParseCollectionStore.put).not.toHaveBeenCalled()
+        
+    it 'should store inside ngParseCollectionStore if `hash` function is provided', ->
+        spyOn(ngParseCollectionStore, 'put')
+        hashColl = new TestHashCollection id: 'hash'
+        expect(ngParseCollectionStore.put).toHaveBeenCalled()
+        
+    it 'should retrieve stored collection from ngParseCollectionStore using `@get`', ->
+        hashColl    = new TestHashCollection id: 'hash'
+        console.log ngParseCollectionStore._collections
+        ngParseCollectionStore.has('TestHashCollection:hash').should.be.true
+        
+        getColl     = TestHashCollection.get id: 'hash'
+        getColl.should.be.equal hashColl
     
     # Fetch and Update
     #

@@ -12,7 +12,8 @@ angular
                 @_lastUpdate = null
                 
                 # Register collection for future use
-                ngParseCollectionStore.put @constructor.hash(options), @ if @constructor.hash(options) isnt null
+                hash = @constructor.hash(options)
+                ngParseCollectionStore.put hash, @ if hash?
             
             add: (obj) ->
                 unless obj instanceof @class
@@ -84,7 +85,7 @@ angular
             @hash: (options = {}) ->
                 null
                 
-            @get: (options) ->
+            @get: (options = {}) ->
                 hash = @hash options
                 if ngParseCollectionStore.has hash
                     ngParseCollectionStore.get hash
