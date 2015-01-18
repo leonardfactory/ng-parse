@@ -89,6 +89,14 @@ gulp.task 'test:min', (done) ->
 # Run all tests for deployed version
 gulp.task 'test', [ 'test:dist', 'test:min' ]
 
+# Test watcher for local development on OSX
+#
+gulp.task 'test:start', (done) ->
+    karma.start(
+            configFile: "#{__dirname}/config/karma.local.conf.coffee",
+            singleRun: false 
+        , done)
+
 # Watcher
 #
 gulp.task 'watch', ->

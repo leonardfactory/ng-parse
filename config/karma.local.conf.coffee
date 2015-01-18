@@ -1,7 +1,7 @@
 # Karma configuration
 module.exports = (config) ->
     config.set
-        basePath: ''
+        basePath: '../'
         
         frameworks: ['jasmine', 'chai', 'angular-filesort']
         
@@ -33,13 +33,13 @@ module.exports = (config) ->
                 
             transformPath: (path) -> path.replace /\.coffee$/, '.js'
             
-        reporters: ['mocha', 'coverage' ]
+        reporters: ['mocha', 'coverage', 'osx']
         
         port: 9876
         colors: true
         logLevel: config.LOG_INFO
         autoWatch: true
         
-        browsers: ['Chrome']
+        browsers: ['PhantomJS']
         
         singleRun: false
