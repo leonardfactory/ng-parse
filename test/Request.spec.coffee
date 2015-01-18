@@ -83,6 +83,14 @@ describe 'NgParse.Request', ->
             
             (-> new NgParseRequest wrongOptions).should.throw Error
             
+        it 'should set default method to GET', ->
+            opts =
+                type: NgParseRequest.Type.Other
+                url: 'testurl'
+            
+            request = new NgParseRequest opts
+            request.httpConfig.method.should.be.equal 'GET'
+            
         it 'should not allow Queries without GET method', ->
             wrongOptions =
                 method: 'POST'
@@ -103,6 +111,12 @@ describe 'NgParse.Request', ->
             request = new NgParseRequest queryOptions
             request.httpConfig.url.should.be.equal "/classes/TestClass/"
                 
+        it 'should not allow a not-POST resource request without an objectId', ->
+            wrongOptions =
+                method: 'GET'
+                type: NgParseRequest.Type.Resource
+                
+            (-> request = new NgParseRequest wrongOptions).should.throw "Can't fetch a resource without an `objectId` specified in the options" 
                 
         it 'should not allow a POST resource request with an objectId', ->
             wrongOptions = 
@@ -110,6 +124,19 @@ describe 'NgParse.Request', ->
                 type: NgParseRequest.Type.Resource
                 data:
                     objectId: 'id_old_object'
+            
+            (-> request = new NgParseRequest wrongOptions).should.throw Error
+            
+        it 'should not allow a not-POST resource to CloudCode', ->
+            wrongOptions = # method defaults to GET
+                type: NgParseRequest.Type.Cloud
+            
+            (-> request = new NgParseRequest wrongOptions).should.throw "Can't run a Cloud Code function with a method different from POST"
+        
+        it 'should not allow a CloudCode request without a function name', ->
+            wrongOptions =
+                type: NgParseRequest.Type.Cloud
+                method: 'POST'
             
             (-> request = new NgParseRequest wrongOptions).should.throw Error
             
@@ -122,7 +149,13 @@ describe 'NgParse.Request', ->
                 type: NgParseRequest.Type.Other
             
             (-> request = new NgParseRequest wrongOptions).should.throw "Can't create a NgParseRequest with type `Other` without specifying `url` in options"
+        
+        it 'should throw if no recognized type is passed', ->
+            wrongOptions =
+                type: 'unrecognizedType'
             
+            (-> request = new NgParseRequest wrongOptions).should.throw "`options.type` not recognized. It should be one of NgParseRequest.Type"
+        
         describe 'Session Token', ->
             
             it 'should not set sessionToken if not set in configuration', ->

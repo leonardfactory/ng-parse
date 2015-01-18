@@ -19,7 +19,7 @@ angular
             
             # Create a new Request, handling options in order to create correct paths
             #
-            constructor: (options = {}) ->
+            constructor: (options) ->
                 # Passed method
                 @method = options.method ? 'GET'
                 @type   = options.type
@@ -72,6 +72,9 @@ angular
                         throw new Error "Can't create a NgParseRequest with type `Other` without specifying `url` in options"
                         
                     @url = options.url
+                
+                else
+                    throw new Error "`options.type` not recognized. It should be one of NgParseRequest.Type"
                     
                 
                 @httpConfig = 
@@ -87,7 +90,7 @@ angular
                 
             # Factory pattern to create Requests
             #
-            @create: (options = {}) ->
+            @create: (options) ->
                 new @ options
             
             # Perform a request returning a `$q` promise
