@@ -1,0 +1,29 @@
+{
+  "name": "ng-parse",
+  "version": "0.1.0",
+  "description": "Angular module to easily use Parse.com services in your app",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "karma start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leonardfactory/ng-parse.git"
+  },
+  "keywords": [
+    "angular",
+    "parse.com"
+  ],
+  "author": "@leonardfactory",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/leonardfactory/ng-parse/issues"
+  },
+  "homepage": "https://github.com/leonardfactory/ng-parse",
+  "devDependencies": {
+    "gulp": "^3.8.10"
+  }
+}
