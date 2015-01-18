@@ -1,6 +1,6 @@
 /**
  * ng-parse - Angular module to easily use Parse.com services in your app
- * @version v0.1.1
+ * @version v0.1.2
  * @link https://github.com/leonardfactory/ng-parse
  * @license MIT
  */

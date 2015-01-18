@@ -4,13 +4,17 @@
   "main": "./dist/ng-parse.js",
   "homepage": "https://github.com/leonardfactory/ng-parse",
   "authors": [
-    "@leonardfactory"
+    "Leonardo Ascione <me@leonardfactory.com> @leonardfactory"
   ],
   "description": "Angular module to easily use Parse.com services in your app",
   "keywords": [
     "angular",
     "parse.com"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/leonardfactory/ng-parse.git"
+  },
   "license": "MIT",
   "ignore": [
     "**/.*",
