@@ -113,7 +113,6 @@ describe 'NgParse.Cloud', ->
         NgParseCloud
             .run 'save', newObj, yes
             .then (result) =>
-                console.log result
                 resObj = result
         $httpBackend.flush()
         
