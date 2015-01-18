@@ -23,7 +23,8 @@ module.exports = (config) ->
             ]
         
         preprocessors:
-            '**/*.coffee': ['coffee']
+            '**/src/**/*.coffee': ['coverage']
+            '**/test/**/*.coffee': ['coffee']
             
         coffeePreprocessor:
             options:
@@ -32,7 +33,7 @@ module.exports = (config) ->
                 
             transformPath: (path) -> path.replace /\.coffee$/, '.js'
             
-        reporters: ['mocha']
+        reporters: ['mocha', 'coverage']
         
         port: 9876
         colors: true
