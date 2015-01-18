@@ -204,6 +204,7 @@ describe 'NgParse.Object', ->
                     .when 'PUT', "/classes/Fetch/new_id"
                     .respond
                         objectId: 'new_id'
+                        otherData: 'data'
                         
                 $httpBackend
                     .when 'POST', "/classes/Fetch/"
@@ -399,6 +400,22 @@ describe 'NgParse.Object', ->
                 updateObj.dirty.should.be.empty
                 json = updateObj._toParseJSON()
                 json.should.not.have.keys ['test']
+                
+            it 'should return even raw result when passing `returnResponse` option', ->
+                updateObj = new FetchObject objectId: 'new_id'
+                result = null
+                $httpBackend.expectPUT "/classes/Fetch/new_id"
+                updateObj.save(yes).then (res) -> result = res
+                $httpBackend.flush()
+                
+                result.should.be.an.instanceof Array
+                result.should.have.length 2
+                
+                obj = result[0]
+                obj.should.be.equal updateObj
+                
+                data = result[1]
+                data.should.have.property 'otherData', 'data'
            
         # Delete
         # 

@@ -73,6 +73,31 @@ angular
                         
                 deferred.promise
                 
+            # Signup.
+            #
+            # Currently logs the user in after a signUp request.
+            # Implement like a simple save, just requiring an username and
+            # password to be set.
+            #
+            signup: ->
+                unless @username?.length and @password?.length
+                    throw new Error "Can't register without username and password set"
+                
+                @save yes
+                    .then (result) =>
+                        [ ..., response ] = result
+                        @_sessionToken = response.sessionToken
+                        
+                        # save as currentUser
+                        @constructor.current = @
+                        
+                        # save to local storage
+                        @constructor._storageSave()
+                        
+                        # Return @ to allow chaining
+                        @
+            
+                
             # Logout
             #
             @logout: ->

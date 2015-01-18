@@ -216,9 +216,17 @@ angular
             # Save an object storing it on Parse.
             # Behave differently if the object is new or we are just updating
             #
+            # @param {Boolean} returnResponse Specify if the promise should
+            #   resolve passing only the `@` object or an Array so composed:
+            #   `[ @ , response ]`, where response is the parsed JSON object
+            #   returned by server.
+            #   This feature is useful in case there is a need for further
+            #   processing, i.e. `user.signup` that needs the session token
+            #   from the response object.
+            #
             # @return {Promise} $q promise
             #
-            save: ->
+            save: (returnResponse = false) ->
                 if @isNew
                     # Create
                     request = new NgParseRequest
@@ -241,7 +249,7 @@ angular
                     .success (result) =>
                         @_updateWithAttributes result
                         @_resetOps()
-                        deferred.resolve @
+                        deferred.resolve if returnResponse then [ @, result ] else @
                     .error (error) =>
                         deferred.reject error
                         
