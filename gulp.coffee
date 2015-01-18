@@ -33,7 +33,8 @@ banner = """
 #
 onError = (err) ->
     gutil.beep()
-    console.log err
+    gutil.log   gutil.colors.cyan('Plumber') + gutil.colors.red(' found unhandled error:\n'),
+                err.toString()
     
 
 # Build not-minified version, with sourcemaps.
@@ -63,6 +64,12 @@ gulp.task 'build:prod', ->
         .pipe header banner, pkg: config
         .pipe gulp.dest paths.dist
 
+# Build all versions
+#
+gulp.task 'build', [ 'build:prod', 'build:dev' ]
+gulp.task 'default', [ 'build' ]
+    
+
 # Test dist version
 #
 gulp.task 'test:dist', (done) ->
@@ -78,4 +85,12 @@ gulp.task 'test:min', (done) ->
             configFile: "#{__dirname}/config/karma.min.conf.coffee",
             singleRun: yes 
         , done)
+
+# Run all tests for deployed version
+gulp.task 'test', [ 'test:dist', 'test:min' ]
+
+# Watcher
+#
+gulp.task 'watch', ->
+    gulp.watch paths.src, -> gulp.start [ 'build:dev', 'build:prod' ]
         
