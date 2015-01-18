@@ -1,8 +1,8 @@
-# Introduction
+# NgParse [![Build Status](https://travis-ci.org/leonardfactory/ng-parse.svg)](https://travis-ci.org/leonardfactory/ng-parse)
 **NgParse** is an angular module that easily allows to use Parse.com services into an AngularJS App.
 The focus is to provide a Model layer available and coherent in every place, well integrated with Angular, and well tested. easier syntax to use models into templates without worrying about properties accessor, collections extremely
 
-#Installation
+##Installation
 
 **NgParse** is available via bower, just run
 
@@ -10,7 +10,7 @@ The focus is to provide a Model layer available and coherent in every place, wel
 bower install --save ng-parse
 ````
 
-# Features
+## Features
 ### Models are shared
 That means that if you do a query and concurrently fetch a collection, if they share objects, they will be the same. (And by same, I mean `===`!)
 
@@ -94,7 +94,7 @@ collection = MyCollection.get()
 * Default NgParse.User with all Parse.com functionalities (ehm, see todo, well, almost all), and easily extensible
 * Well tested with Karma, Jasmine & Chai.js
 
-# ToDo
+## ToDo
 * Add support for Counter attribute type
 * Add `addUnique` operation to `NgParse.Array`
 * Implement attribute base class as a mixin
@@ -105,14 +105,14 @@ collection = MyCollection.get()
 * Implement all methods for `NgParse.User`
 * More documentation
 
-#Contact
+##Contact
 Leonardo Ascione
 
 * http://github.com/leonardfactory
 * http://twitter.com/leonardfactory
 * me@leonardfactory.com
 
-#License
+##License
 MIT License
 
 Copyright (c) 2015 Leonardo Ascione
