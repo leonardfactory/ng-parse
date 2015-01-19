@@ -33,33 +33,39 @@ angular
                             throw new Error "Can't process in a relation an object that has not an ObjectId (did you save it?)"
                 
                 objs
+                
+            # Performs an op with some objects
+            #
+            op: (type, objects) ->
+                objs        = @_normalizedObjectsArray objects
+                pointerObjs = (obj._toPointer() for obj in objs)
+                
+                # Multiple ops of same type are supported
+                if @__parseOps__.length isnt 0
+                    if @__parseOps__[0].__op isnt type
+                        throw new Error "NgParse.Relation Actually doesn't support multiple ops with a different type"
+                    
+                    # Push the new objects inside array
+                    @__parseOps__[0].objects.push.apply @__parseOps__[0].objects, pointerObjs
+                
+                # Create the op if it is not present
+                else
+                    @__parseOps__.push
+                        '__op': type
+                        'objects': pointerObjs
             
             # Adds a NgParse.Object to the relation.
             #
             # @param {NgParse.Object | Array<NgParse.Object>} objects A single NgParse.Object to add inside the relation or an array
             #
             add: (objects) ->
-                if @__parseOps__.length > 0
-                    throw new Error "Currently can't perform more than one operation without a save on NgParse.Relation"
-                
-                objs = @_normalizedObjectsArray objects
-                
-                @__parseOps__.push
-                    '__op': 'AddRelation'
-                    'objects': obj._toPointer() for obj in objs
+                @op 'AddRelation', objects
                     
             # Remove a NgParse.Object from the relation.
             #
             # @param {NgParse.Object | Array<NgParse.Object>} objects A single NgParse.Object to remove from the relation or an array
             remove: (objects) ->
-                if @__parseOps__.length > 0
-                    throw new Error "Currently can't perform more than one operation without a save on NgParse.Relation"
-                    
-                objs = @_normalizedObjectsArray objects
-                
-                @__parseOps__.push
-                    '__op': 'RemoveRelation'
-                    'objects': obj._toPointer() for obj in objs
+                @op 'RemoveRelation', objects
             
             # Get a query for this relationship
             #

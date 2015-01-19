@@ -5,6 +5,7 @@ describe 'NgParse.Relation', ->
     TestObject = null
     rel = null
     testObj = null
+    testObj2 = null
     
     beforeEach ->
         angular.mock.module 'ngParse'
@@ -21,6 +22,7 @@ describe 'NgParse.Relation', ->
             rel = new NgParseRelation className: 'Test', name: 'rel'
                 
             testObj = new TestObject objectId: 'test_id'
+            testObj2 = new TestObject objectId: 'test_id_2'
         
     it 'should be initialized with correct className', ->
         rel.className.should.be.equal 'Test'
@@ -42,9 +44,9 @@ describe 'NgParse.Relation', ->
         obj.className.should.be.equal 'Test'
         obj.__type.should.be.equal 'Pointer'
     
-    it 'should not allow to use multiple adds', ->
+    it 'should allow to use multiple adds', ->
         rel.add testObj
-        (-> rel.add testObj).should.throw Error
+        (-> rel.add testObj).should.not.throw Error
         
     it 'should remove one element and register it as a pointer in the __parseOps__', ->
         rel.remove testObj
@@ -67,6 +69,14 @@ describe 'NgParse.Relation', ->
         op = rel.__parseOps__[0]
         op.__op.should.be.equal 'RemoveRelation'
         op.objects.should.have.length 2
+        
+    it 'should not allow multiple ops with different type', ->
+        rel.remove testObj
+        (-> rel.add testObj).should.throw
+        
+    it 'should allow to use multiple removes', ->
+        rel.remove testObj
+        (-> rel.remove testObj).should.not.throw Error
         
     it 'should not allow to add a non-NgParseObject', ->
         (-> rel.add 14).should.throw
@@ -102,6 +112,27 @@ describe 'NgParse.Relation', ->
         obj.__type.should.be.equal 'Pointer'
         obj.objectId.should.be.equal 'test_id'
         obj.className.should.be.equal 'Test'
+            
+    it 'should serialize correctly if multiple relations are added', ->
+        rel.add testObj
+        rel.add testObj2
+        
+        jsonRel = rel.toParseJSON()
+        jsonRel.should.have.keys ['__op', 'objects']
+        jsonRel.__op.should.be.equal 'AddRelation'
+        
+        objs = jsonRel.objects
+        objs.should.have.length 2
+        
+        objs[0].should.have.keys ['__type', 'className', 'objectId']
+        objs[0].__type.should.be.equal 'Pointer'
+        objs[0].objectId.should.be.equal 'test_id'
+        objs[0].className.should.be.equal 'Test'    
+        
+        objs[1].should.have.keys ['__type', 'className', 'objectId']
+        objs[1].__type.should.be.equal 'Pointer'
+        objs[1].objectId.should.be.equal 'test_id_2'
+        objs[1].className.should.be.equal 'Test'
             
     it 'should refer to correct class', ->
         rel.class.should.be.equal TestObject
