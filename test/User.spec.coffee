@@ -141,6 +141,9 @@ describe 'NgParse.User', ->
     describe 'Signup', ->
         
         beforeEach ->
+            inject ($rootScope) =>
+                @$rootScope = $rootScope
+                
             $httpBackend
                 .when 'POST', "/users/"
                 .respond
@@ -151,16 +154,21 @@ describe 'NgParse.User', ->
             @user.username = 'username'
             @user.password = 'password'
                     
-        it 'should not allow registration if both password and username are not set', ->
+        it 'should not allow registration if username is not set', ->
             wrongUser = new NgParseUser
             wrongUser.password = 'password'
             
-            (-> wrongUser.signup() ).should.throw "Can't register without username and password set"
+            wrongUser.signup().catch (error) => @error = error
+            @$rootScope.$apply() # Resolve promise
+            @error.should.be.equal "Can't register without username and password set"
             
+        it 'should not allow register if password is not set', ->
             wrongUser = new NgParseUser
             wrongUser.username = 'username'
             
-            (-> wrongUser.signup() ).should.throw "Can't register without username and password set"
+            wrongUser.signup().catch (error) => @error = error
+            @$rootScope.$apply() # Resolve promise
+            @error.should.be.equal "Can't register without username and password set"
             
         it 'should call signup correctly', ->
             (-> @user.signup() ).should.not.throw

@@ -55,7 +55,7 @@ angular
                     .perform()
                     .success (result) =>
                         # Create the user or grab it from model
-                        user = @get id: result.objectId
+                        user = @get id: result.objectId 
                         user._updateWithAttributes result
 
                         # todo: erase other users sessionToken?
@@ -81,7 +81,7 @@ angular
             #
             signup: ->
                 unless @username?.length and @password?.length
-                    throw new Error "Can't register without username and password set"
+                    return $q.reject "Can't register without username and password set"
                 
                 @save yes
                     .then (result) =>
