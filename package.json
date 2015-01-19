@@ -1,6 +1,6 @@
 {
   "name": "ng-parse",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Angular module to easily use Parse.com services in your app",
   "main": "dist/ng-parse.js",
   "directories": {

@@ -1,6 +1,6 @@
 {
   "name": "ng-parse",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "main": "./dist/ng-parse.js",
   "homepage": "https://github.com/leonardfactory/ng-parse",
   "authors": [
